@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: d79e0c585499a35459cf5edddcc435ba
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 276554
+  packageName: Better Transform - Size, Notes, Global-Local workspace & child parent
+    transform
+  packageVersion: 2.9.0
+  assetPath: Assets/Plugins/Tiny Giant Studio/Better Inspector/Common Scripts/Scales.asset
+  uploadId: 758625
