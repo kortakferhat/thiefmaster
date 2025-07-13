@@ -12,6 +12,7 @@ namespace Gameplay.Bootstrapper
     {
         private Transform managersParent;
         [SerializeField] private Camera topCamera;
+        [SerializeField] private Gameplay.Character.CharacterController characterController;
         [SerializeField] private Transform viewRoot;
         [SerializeField] private Transform popupRoot;
         [SerializeField] private Transform tooltipsRoot;
@@ -56,6 +57,7 @@ namespace Gameplay.Bootstrapper
             tooltipManager.Initialize(poolManager, tooltipsRoot);
             ServiceLocator.Register<ITooltipManager>(tooltipManager);
             
+            characterController.Initialize();
             gameManager.StartGame();
             
             mainMenuBootstrapper.Initialize();
