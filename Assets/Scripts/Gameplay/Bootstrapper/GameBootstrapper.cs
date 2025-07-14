@@ -1,3 +1,4 @@
+using Infrastructure.Components;
 using Infrastructure.Managers;
 using Infrastructure.Managers.EconomyManager;
 using Infrastructure.Managers.TooltipManager;
@@ -13,6 +14,7 @@ namespace Gameplay.Bootstrapper
         private Transform managersParent;
         [SerializeField] private Camera topCamera;
         [SerializeField] private Gameplay.Character.CharacterController characterController;
+        [SerializeField] private CameraFollow cameraFollow;
         [SerializeField] private Transform viewRoot;
         [SerializeField] private Transform popupRoot;
         [SerializeField] private Transform tooltipsRoot;
@@ -58,6 +60,7 @@ namespace Gameplay.Bootstrapper
             ServiceLocator.Register<ITooltipManager>(tooltipManager);
             
             characterController.Initialize();
+            cameraFollow.Initialize();
             gameManager.StartGame();
             
             mainMenuBootstrapper.Initialize();
