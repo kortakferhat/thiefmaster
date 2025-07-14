@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cd7e8db3af9df421a94a75f79405b3b9, type: 3}
   m_Name: CharacterConfig
   m_EditorClassIdentifier: 
-  moveSpeed: 8
-  rotationSpeed: 10
+  moveSpeed: 25
+  rotationSpeed: 15
   inputSensitivity: 1
   characterHeight: 1.8
   characterRadius: 0.5
