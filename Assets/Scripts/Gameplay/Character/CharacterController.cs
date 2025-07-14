@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using Gameplay.Configs;
 using TowerClicker.Infrastructure;
 
@@ -7,7 +8,7 @@ namespace Gameplay.Character
     public class CharacterController : BaseEntity
     {
         private static readonly int Blend = Animator.StringToHash("Blend");
-        public bool IsMoving => isMoving;
+        public bool IsMoving => _isMoving;
         public Vector3 CurrentPosition => characterTransform.position;
         
         [Header("Configuration")]
@@ -17,82 +18,93 @@ namespace Gameplay.Character
         [SerializeField] private Transform characterTransform;
         [SerializeField] private Animator animator;
         
-        private Vector3 moveDirection = Vector3.zero;
-        private bool isMoving = false;
+        private Rigidbody _rigidbody;
+        private InputSystem_Actions _playerInputActions;
+        private Vector3 _moveDirection = Vector3.zero;
+        private Vector2 _inputVector = Vector2.zero;
+        private bool _isMoving = false;
         
         public override void Initialize()
         {
             base.Initialize();
+            _rigidbody = GetComponent<Rigidbody>();
+            
+            // Initialize Input System
+            _playerInputActions = new InputSystem_Actions();
+            _playerInputActions.Player.Move.performed += OnMovementPerformed;
+            _playerInputActions.Player.Move.canceled += OnMovementCanceled;
+            _playerInputActions.Player.Enable();
+        }
+        
+        private void OnDestroy()
+        {
+            if (_playerInputActions != null)
+            {
+                _playerInputActions.Player.Move.performed -= OnMovementPerformed;
+                _playerInputActions.Player.Move.canceled -= OnMovementCanceled;
+                _playerInputActions.Player.Disable();
+                _playerInputActions.Dispose();
+            }
+        }
+        
+        private void OnMovementPerformed(InputAction.CallbackContext context)
+        {
+            _inputVector = context.ReadValue<Vector2>();
+            HandleMovementInput();
+        }
+        
+        private void OnMovementCanceled(InputAction.CallbackContext context)
+        {
+            _inputVector = Vector2.zero;
+            HandleMovementInput();
+        }
+        
+        private void HandleMovementInput()
+        {
+            _moveDirection = new Vector3(_inputVector.x, 0f, _inputVector.y).normalized;
+            _isMoving = _moveDirection.magnitude > 0.1f;
         }
         
         protected override void OnEntityUpdate()
         {
-            HandleKeyboardInput();
-            UpdateMovement();
             UpdateAnimator();
         }
-        
-        private void HandleKeyboardInput()
+
+        protected override void OnEntityFixedUpdate()
         {
-            float horizontal = 0f;
-            float vertical = 0f;
-            
-            if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))
-                vertical += 1f;
-            if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))
-                vertical -= 1f;
-            if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
-                horizontal -= 1f;
-            if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
-                horizontal += 1f;
-            
-            moveDirection = new Vector3(horizontal, 0f, vertical).normalized;
-            isMoving = moveDirection.magnitude > 0.1f;
-        }
-        
-        private void UpdateMovement()
-        {
-            if (!isMoving) return;
-            
-            Vector3 movement = moveDirection * characterConfig.MoveSpeed * Time.deltaTime;
-            characterTransform.position += movement;
-            
-            if (moveDirection != Vector3.zero)
+            base.OnEntityFixedUpdate();
+
+            if (!_isMoving)
             {
-                Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
-                characterTransform.rotation = Quaternion.Slerp(
-                    characterTransform.rotation, 
-                    targetRotation, 
-                    characterConfig.RotationSpeed * Time.deltaTime
+                _rigidbody.linearVelocity = Vector3.zero; 
+                return;
+            }
+
+            var movement = _moveDirection * (characterConfig.MoveSpeed * 10 * Time.fixedDeltaTime);
+            _rigidbody.linearVelocity = movement;
+
+            if (_moveDirection != Vector3.zero)
+            {
+                var targetRotation = Quaternion.LookRotation(_moveDirection);
+                _rigidbody.rotation = Quaternion.Slerp(
+                    _rigidbody.rotation,
+                    targetRotation,
+                    characterConfig.RotationSpeed * Time.fixedDeltaTime
                 );
             }
+            
+            _rigidbody.angularVelocity = Vector3.zero;
         }
+        
         
         private void UpdateAnimator()
         {
             if (animator != null)
             {
                 var currentBlendValue = animator.GetFloat(Blend);
-                var target = isMoving ? 1f : 0f;
+                var target = _isMoving ? 1f : 0f;
                 animator.SetFloat(Blend, Mathf.Lerp(currentBlendValue, target, Time.deltaTime * 10f));
             }
-        }
-        
-        public void SetCharacterConfig(CharacterConfigSO config)
-        {
-            characterConfig = config;
-        }
-        
-        public void SetMoveDirection(Vector3 direction)
-        {
-            moveDirection = new Vector3(direction.x, 0f, direction.z).normalized;
-            isMoving = moveDirection.magnitude > 0.1f;
-        }
-        
-        public void StopMovement()
-        {
-            moveDirection = Vector3.zero;
-            isMoving = false;
         }
     }
 }

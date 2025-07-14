@@ -1,12 +1,5 @@
-using System.Collections.Generic;
-using Gameplay.Floors;
 using Gameplay.MainMenu;
-using Gameplay.MainMenu.TowerUpgrade;
-using Gameplay.TowerDeck;
 using Gameplay.Views;
-using NUnit.Framework;
-using TowerClicker.Infrastructure;
-using TowerClicker.Infrastructure.Managers;
 using UnityEngine;
 
 namespace Gameplay.Bootstrapper

@@ -29,7 +29,7 @@ namespace Gameplay
             }
         }
 
-        protected virtual void Update()
+        protected void Update()
         {
             if (!initialized) return;
             
@@ -38,7 +38,7 @@ namespace Gameplay
             OnEntityUpdate();
         }
         
-        protected virtual void FixedUpdate()
+        protected void FixedUpdate()
         {
             if (!initialized)
             {

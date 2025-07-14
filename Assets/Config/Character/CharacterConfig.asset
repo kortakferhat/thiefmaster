@@ -13,7 +13,4 @@ MonoBehaviour:
   m_Name: CharacterConfig
   m_EditorClassIdentifier: 
   moveSpeed: 25
-  rotationSpeed: 15
-  inputSensitivity: 1
-  characterHeight: 1.8
-  characterRadius: 0.5
+  rotationSpeed: 10

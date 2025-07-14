@@ -70,19 +70,6 @@ namespace Gameplay.Enemy{
         
         protected override void OnEntityTriggerStay(Collider other)
         {
-            if (other.CompareTag("Tower"))
-            {
-                var tower = other.GetComponent<Tower>();
-                if (tower != null)
-                {
-                    var currentTime = Time.time;
-                    if (currentTime - lastHitTime > enemyConfig.attackSpeed)
-                    {
-                        lastHitTime = currentTime;
-                        tower.OnHit(enemyConfig.damage);
-                    }
-                }
-            }
         }
         
         private void MoveToCenter()
