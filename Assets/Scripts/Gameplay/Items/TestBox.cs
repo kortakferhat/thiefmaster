@@ -1,23 +1,29 @@
-using System;
 using DG.Tweening;
+using Gameplay.Collectables;
 using Gameplay.Events;
 using Infrastructure;
 using Infrastructure.Managers.PoolManager;
 using TowerClicker.Infrastructure;
 using UnityEngine;
 
-namespace Gameplay.Rewards
+namespace Gameplay.Items
 {
-    public class Coin : BaseEntity
+    public class TestBox : BaseEntity, IItem
     {
+        public string ItemName => "TestBox";
         private IPoolManager poolManager;
 
         private void Start()
         {
             poolManager = ServiceLocator.Get<IPoolManager>();
         }
+        
+        public void Collect()
+        {
+            poolManager.DespawnAfterDelay(PoolKeys.TestBox, gameObject, 0);
+        }
 
-        public void MoveToCenter(Vector3 position = default)
+        public void MoveTo(Vector3 position = default)
         {
             var originalScale = transform.localScale;
             transform.localScale = originalScale * .25f;
@@ -29,7 +35,7 @@ namespace Gameplay.Rewards
                 .OnComplete(() =>
                 {
                     EventBus.Publish(new PlayerRewardCollectEvent(1));
-                    poolManager.DespawnAfterDelay(PoolKeys.Coin, gameObject, 0);
+                    poolManager.DespawnAfterDelay(PoolKeys.TestBox, gameObject, 0);
                 });
         }
     }

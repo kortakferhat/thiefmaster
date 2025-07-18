@@ -12,4 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a4d0aacc01f343ffb522c9bd9b968b2a, type: 3}
   m_Name: PoolConfiguration
   m_EditorClassIdentifier: 
-  pools: []
+  pools:
+  - tag: TestBox
+    prefab: {fileID: 7385770594715002587, guid: 21db049b04d4441eb9c9fd401474f59c, type: 3}
+    size: 10
+  - tag: Coin
+    prefab: {fileID: 2095859713536135509, guid: fa7b4ce9e135345ef8e8efb912ad70ce, type: 3}
+    size: 10

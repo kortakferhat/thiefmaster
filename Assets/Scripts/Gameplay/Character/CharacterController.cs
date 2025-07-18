@@ -1,7 +1,7 @@
+using Gameplay.Collectables;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Gameplay.Configs;
-using TowerClicker.Infrastructure;
 
 namespace Gameplay.Character
 {
@@ -104,6 +104,17 @@ namespace Gameplay.Character
                 var currentBlendValue = animator.GetFloat(Blend);
                 var target = _isMoving ? 1f : 0f;
                 animator.SetFloat(Blend, Mathf.Lerp(currentBlendValue, target, Time.deltaTime * 10f));
+            }
+        }
+
+        protected override void OnEntityTriggerEnter(Collider other)
+        {
+            base.OnEntityTriggerEnter(other);
+
+            if (other.tag.Equals("Item"))
+            {
+                var collectable = other.GetComponent<IItem>();
+                collectable.Collect();
             }
         }
     }

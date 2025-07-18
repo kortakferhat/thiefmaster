@@ -30,10 +30,8 @@ namespace Gameplay.Views
             _viewManager = ServiceLocator.Get<IViewManager>();
             _economyManager = ServiceLocator.Get<IEconomyManager>();
             
-            //_view.OnTowerPopupButtonClicked += HandleTowerPopupButtonClick;
-            
-            EventBus.Subscribe<TowerLevelUpEvent>(OnTowerLevelUp);
             EventBus.Subscribe<PlayerRewardCollectEvent>(OnPlayerRewardCollect);
+            EventBus.Subscribe<PlayerItemCollectEvent>(OnPlayerItemCollect);
             EventBus.Subscribe<EconomyEvent>(OnEconomyEvent);
         }
 
@@ -41,6 +39,11 @@ namespace Gameplay.Views
         {
             _model.SetMoney(args.CurrentMoney);
             _view.SetMoneyText(_model.Money);
+        }
+        
+        private void OnPlayerItemCollect(PlayerItemCollectEvent args)
+        {
+            _model.AddItem(args.ItemType);
         }
 
         private void OnPlayerRewardCollect(PlayerRewardCollectEvent args)
@@ -50,28 +53,16 @@ namespace Gameplay.Views
             
             _economyManager.AddMoney(args.Amount);
         }
-
-        private void OnTowerLevelUp(TowerLevelUpEvent args)
-        {
-            OpenTowerUpgradePopup();
-        }
-
-        private void HandleTowerPopupButtonClick()
-        {
-            OpenTowerUpgradePopup();
-        }
         
         private void OpenTowerUpgradePopup()
         {
             if (_gameManager.State is not GameState.Game) return;
-            //_viewManager.ShowPopupAsync<TowerUpgradePopup>("TowerUpgradePopup");
         }
         
         public void Dispose()
         {
-            //_view.OnTowerPopupButtonClicked -= HandleTowerPopupButtonClick;
-            EventBus.Unsubscribe<TowerLevelUpEvent>(OnTowerLevelUp);
             EventBus.Unsubscribe<PlayerRewardCollectEvent>(OnPlayerRewardCollect);
+            EventBus.Unsubscribe<PlayerItemCollectEvent>(OnPlayerItemCollect);
             EventBus.Unsubscribe<EconomyEvent>(OnEconomyEvent);
         }
     }

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using Gameplay.Collectables;
 using Gameplay.MVP;
 
 namespace Gameplay.MainMenu
@@ -5,6 +7,7 @@ namespace Gameplay.MainMenu
     public class MainMenuModel : IModel
     {
         public int Money { get; private set; } = 0;
+        public Dictionary<ItemType, int> Items { get; private set; } = new Dictionary<ItemType, int>();
 
         public void SetMoney(int money)
         {
@@ -24,6 +27,14 @@ namespace Gameplay.MainMenu
         public void AddFloorToTop(string poolType)
         {
             
+        }
+
+        public void AddItem(ItemType argsItemType)
+        {
+            if (!Items.TryAdd(argsItemType, 1))
+            {
+                Items[argsItemType]++;
+            }
         }
     }
 }
