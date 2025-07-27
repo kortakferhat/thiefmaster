@@ -15,13 +15,6 @@ namespace Gameplay.Graph
         [Header("Editor Settings")]
         public float nodeSize = 30f;
         public float edgeWidth = 6f;
-        public Color startNodeColor = Color.green;
-        public Color goalNodeColor = Color.red;
-        public Color normalNodeColor = Color.white;
-        public Color breakableNodeColor = Color.yellow;
-        public Color redirectorNodeColor = Color.blue;
-        public Color trapNodeColor = Color.black;
-        public Color enemyNodeColor = Color.magenta;
 
         private void OnValidate()
         {
