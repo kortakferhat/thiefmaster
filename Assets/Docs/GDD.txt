@@ -1,0 +1,182 @@
+﻿# SilentGO GDD
+
+### 🟩 GAME OVERVIEW
+
+> Silent Grid is a turn-based puzzle game where the player moves an agent across a map built from connected points (nodes). The agent moves along paths (edges) that link these nodes. The goal is to reach a specific destination node (Goal) without being seen or caught by enemies. All movements and interactions follow strict rules.
+> 
+
+---
+
+### 🟦 1. MAP STRUCTURE
+
+### 1.1 Nodes
+
+- The map is made of nodes, which are discrete positions on the board.
+- A node can contain only one object at a time: player, enemy, or nothing.
+- Each node has a unique identifier (e.g., number, string, or coordinate).
+- A node may have special behavior or status (see Node Types below).
+
+### 1.2 Edges
+
+- Nodes are connected by edges.
+- An edge is a direct path from one node to another.
+- Each edge defines:
+    - From node
+    - To node
+    - Whether it is one-way (directed) or two-way (undirected)
+    - Whether it is slippery (auto-slide)
+    - Whether it is breakable (used only once)
+- All movement occurs only along valid edges.
+
+---
+
+### 🟨 2. NODE TYPES AND BEHAVIOR
+
+Each node may belong to one of the following types:
+
+- **Normal:** Standard node, used as a regular position.
+- **Start:** The player's starting position at the beginning of the level.
+- **Goal:** The player must reach this node to win the level.
+- **Breakable Node:** Once entered, the node becomes invalid (it disappears or collapses).
+- **Redirector Node (Optional):** Automatically changes movement direction upon entry.
+- **Trap (Optional):** Triggers special behavior (e.g., immediate loss).
+- **Enemy Node:** The node where an enemy is currently located.
+
+**Notes:**
+
+- Breakable and redirector behaviors apply only when entered.
+- If a node becomes destroyed (e.g., breakable), all connected edges become invalid.
+
+---
+
+### 🟥 3. EDGE TYPES AND BEHAVIOR
+
+Each edge may define extra movement behavior:
+
+- **Standard Edge:** Normal connection between two nodes.
+- **Directed Edge:** Can only be used from its “from” node to its “to” node.
+- **Undirected Edge:** Can be used in both directions.
+
+### Slippery Edge:
+
+- Once entered, the agent **cannot stop** until the end of the edge is reached.
+- Slippery behavior overrides breakable nodes and redirectors along the way unless stated otherwise.
+
+### Breakable Edge:
+
+- Once used, the edge **permanently disappears**.
+- It cannot be used again by player or enemy.
+
+**Notes:**
+
+- A breakable edge is removed **after** movement ends.
+- An edge is invalid if:
+    - It leads to a non-existent or destroyed node.
+    - It is blocked.
+    - The player is mid-slide and movement cannot continue.
+
+---
+
+### 🟪 4. PLAYER MOVEMENT RULES
+
+- The player can only move to a node **directly connected** by an active edge.
+- Upon input, one edge is selected based on the desired direction.
+
+### Steps of Movement:
+
+1. Check if a valid edge exists in the chosen direction.
+2. If edge is **not slippery**:
+    - Move player to the destination node.
+3. If edge **is slippery**:
+    - Slide forward until:
+        - No more slippery edge in same direction
+        - Slide is stopped by redirector, breakable node, or invalid edge
+
+### After Movement Ends:
+
+- If on Goal node → **Win**
+- If on enemy node or vision tile → **Loss**
+- If used a breakable edge or node → destroy it
+- If ended on a redirector → update direction and continue sliding
+
+**Notes:**
+
+- Movement is **atomic and uninterrupted**.
+- No input allowed during sliding.
+- Movement fully resolves before enemy actions.
+
+---
+
+### 🟥 5. ENEMY RULES
+
+Enemies occupy nodes. They do not move unless extended (e.g., patrol AI).
+
+### 5.1 Stationary Guard
+
+- Remains on one node.
+- Has a **facing direction**.
+- Sees a number of connected nodes in that direction (e.g., 2–3 depth).
+- Vision is **blocked by**:
+    - Walls
+    - Non-connected paths
+    - Invalid nodes or edges
+
+### 5.2 Enemy Vision
+
+- If the player ends movement on a node within vision, they **lose immediately**.
+
+**Vision Check Timing:**
+
+- After player finishes movement.
+- Before any potential enemy update.
+
+---
+
+### 🟫 6. TURN ORDER
+
+Each round consists of the following phases:
+
+### Input Phase:
+
+- Player chooses direction.
+- Game checks for a valid edge.
+
+### Player Phase:
+
+- Player moves.
+- Slides if needed.
+- Resolves node/edge effects (goal, break, redirector, trap).
+
+### Enemy Phase:
+
+- Enemies check vision or perform scripted actions.
+
+### Resolution Phase:
+
+- Check for **win** (goal reached)
+- Check for **loss** (seen, enemy contact, invalid state)
+
+✅ Input is only allowed again after all steps are complete.
+
+---
+
+### 🟧 7. WIN AND LOSS CONDITIONS
+
+### Win:
+
+- Player ends movement on a **Goal** node.
+
+### Loss:
+
+- Player enters enemy’s node.
+- Player ends turn in enemy vision.
+- Player moves onto an invalid or destroyed path.
+- (Optional) Player becomes trapped with no valid moves.
+
+---
+
+### 🟨 8. INPUT RULES
+
+- Each input represents **one full move**.
+- Input is **disabled** during movement and turn resolution.
+- Input is **re-enabled** after the turn is fully resolved.

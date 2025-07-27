@@ -1,0 +1,83 @@
+# SilentGO Checklist
+
+📦 A. Map & Data Setup (Day 1)
+
+- [ ]  Define basic Node structure (ID, Position, Type)
+- [ ]  Define basic Edge structure (FromNodeID, ToNodeID, Slippery, Directed)
+- [ ]  Manually create a simple map (3–5 nodes)
+- [ ]  Draw nodes in scene using Gizmos
+- [ ]  Draw edges between nodes using Gizmos
+
+### 🎮 B. Player Movement (Day 1–2)
+
+- [ ]  Capture player input (Arrow keys or WASD)
+- [ ]  Check if a valid edge exists in selected direction
+- [ ]  If edge is slippery, slide to the far end
+- [ ]  Update currentNode after movement
+- [ ]  Set transform.position to new node’s position
+- [ ]  Lock input while moving
+- [ ]  Log final node after movement
+
+---
+
+### 🛠️ C. Debug Tools & Reset (Day 2)
+
+- [ ]  Show start node in green (Gizmos)
+- [ ]  Show goal node in yellow (Gizmos)
+- [ ]  Show enemy node in red (Gizmos)
+- [ ]  Press "R" to reload scene instantly
+
+---
+
+### 👁️ D. Enemy & Vision (Day 3)
+
+- [ ]  Add facing direction to enemy
+- [ ]  Trace vision range along edges (e.g., 2–3 nodes ahead)
+- [ ]  Highlight vision nodes using Gizmos
+- [ ]  Trigger loss if player enters visible node
+- [ ]  Log detection result: "Player seen by enemy at Node X"
+
+---
+
+### 🎯 E. Goal & Loss Conditions (Day 3)
+
+- [ ]  Win if player reaches Goal node
+- [ ]  Lose if player enters enemy’s node
+- [ ]  Lose if player is seen by enemy vision
+
+---
+
+### 💥 F. Breakable Node / Edge (Day 4)
+
+- [ ]  Mark breakable nodes after use
+- [ ]  Remove breakable nodes at end of turn
+- [ ]  Remove breakable edge after it is crossed
+- [ ]  Prevent reuse of destroyed nodes/edges
+
+---
+
+### 🔁 G. Turn Cycle (Day 5)
+
+- [ ]  Use TurnInProgress flag to control flow
+- [ ]  After player move, run enemy phase
+- [ ]  Reactivate input after turn ends
+- [ ]  Add logs for turn start/end
+
+---
+
+### 🧪 H. Test Map & Review (Day 5–6)
+
+- [ ]  Create at least two sample levels:
+    - [ ]  One basic goal-reaching puzzle
+    - [ ]  One vision-loss test scenario
+- [ ]  Confirm all mechanics work in order
+- [ ]  Allow restart with “R” on any state
+
+---
+
+### 🧠 BONUS (Optional – Day 7+)
+
+- [ ]  Add basic UI for "You Win / You Lose"
+- [ ]  Setup simple level progression or next button
+- [ ]  Add minimal sound or visual effects
+- [ ]  Editor tool for placing nodes/edges in scene
