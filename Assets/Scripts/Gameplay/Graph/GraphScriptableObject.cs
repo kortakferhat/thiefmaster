@@ -46,6 +46,10 @@ namespace Gameplay.Graph
         {
             graphData.nodes.Clear();
             graphData.edges.Clear();
+
+            // Add default Start and Goal nodes
+            graphData.nodes.Add(new NodeData(new Vector2Int(0, 0), NodeType.Start));
+            graphData.nodes.Add(new NodeData(new Vector2Int(2, 0), NodeType.Goal));
         }
     }
 } 

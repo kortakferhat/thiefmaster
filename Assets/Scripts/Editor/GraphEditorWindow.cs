@@ -28,7 +28,185 @@ namespace Editor
         private bool edgeCreationMode = false;
         private NodeData lastSelectedNode;
         private EdgeData lastSelectedEdge;
+        private EditorMode currentMode = EditorMode.Select;
+        private string modeFeedback = "";
+        private Stack<ICommand> undoStack = new Stack<ICommand>();
+        private Stack<ICommand> redoStack = new Stack<ICommand>();
 
+        public interface ICommand
+        {
+            void Execute();
+            void Undo();
+        }
+
+        public class AddNodeCommand : ICommand
+        {
+            private GraphData graphData;
+            private NodeData node;
+            private bool wasExecuted = false;
+
+            public AddNodeCommand(GraphData graphData, NodeData node)
+            {
+                this.graphData = graphData;
+                this.node = node;
+            }
+
+            public void Execute()
+            {
+                if (!wasExecuted)
+                {
+                    graphData.nodes.Add(node);
+                    wasExecuted = true;
+                }
+            }
+
+            public void Undo()
+            {
+                if (wasExecuted)
+                {
+                    graphData.nodes.Remove(node);
+                    // Remove connected edges
+                    graphData.edges.RemoveAll(e => e.fromId == node.id || e.toId == node.id);
+                }
+            }
+        }
+
+        public class DeleteNodeCommand : ICommand
+        {
+            private GraphData graphData;
+            private NodeData node;
+            private List<EdgeData> connectedEdges;
+            private bool wasExecuted = false;
+
+            public DeleteNodeCommand(GraphData graphData, NodeData node)
+            {
+                this.graphData = graphData;
+                this.node = node;
+                this.connectedEdges = new List<EdgeData>();
+            }
+
+            public void Execute()
+            {
+                if (!wasExecuted)
+                {
+                    // Store connected edges before deletion
+                    connectedEdges = graphData.edges.Where(e => e.fromId == node.id || e.toId == node.id).ToList();
+                    graphData.nodes.Remove(node);
+                    graphData.edges.RemoveAll(e => e.fromId == node.id || e.toId == node.id);
+                    wasExecuted = true;
+                }
+            }
+
+            public void Undo()
+            {
+                if (wasExecuted)
+                {
+                    graphData.nodes.Add(node);
+                    graphData.edges.AddRange(connectedEdges);
+                }
+            }
+        }
+
+        public class AddEdgeCommand : ICommand
+        {
+            private GraphData graphData;
+            private EdgeData edge;
+            private bool wasExecuted = false;
+
+            public AddEdgeCommand(GraphData graphData, EdgeData edge)
+            {
+                this.graphData = graphData;
+                this.edge = edge;
+            }
+
+            public void Execute()
+            {
+                if (!wasExecuted)
+                {
+                    graphData.edges.Add(edge);
+                    wasExecuted = true;
+                }
+            }
+
+            public void Undo()
+            {
+                if (wasExecuted)
+                {
+                    graphData.edges.Remove(edge);
+                }
+            }
+        }
+
+        public class DeleteEdgeCommand : ICommand
+        {
+            private GraphData graphData;
+            private EdgeData edge;
+            private bool wasExecuted = false;
+
+            public DeleteEdgeCommand(GraphData graphData, EdgeData edge)
+            {
+                this.graphData = graphData;
+                this.edge = edge;
+            }
+
+            public void Execute()
+            {
+                if (!wasExecuted)
+                {
+                    graphData.edges.Remove(edge);
+                    wasExecuted = true;
+                }
+            }
+
+            public void Undo()
+            {
+                if (wasExecuted)
+                {
+                    graphData.edges.Add(edge);
+                }
+            }
+        }
+
+        public class MoveNodeCommand : ICommand
+        {
+            private NodeData node;
+            private Vector2Int oldPosition;
+            private Vector2Int newPosition;
+            private bool wasExecuted = false;
+
+            public MoveNodeCommand(NodeData node, Vector2Int newPosition)
+            {
+                this.node = node;
+                this.oldPosition = node.id;
+                this.newPosition = newPosition;
+            }
+
+            public void Execute()
+            {
+                if (!wasExecuted)
+                {
+                    node.id = newPosition;
+                    wasExecuted = true;
+                }
+            }
+
+            public void Undo()
+            {
+                if (wasExecuted)
+                {
+                    node.id = oldPosition;
+                }
+            }
+        }
+
+        public enum EditorMode
+        {
+            Select,
+            CreateNode,
+            CreateEdge,
+            Delete,
+            Move
+        }
 
         // Colors for different node types
         private readonly Dictionary<NodeType, Color> nodeColors = new()
@@ -74,16 +252,10 @@ namespace Editor
             if (panOffset == Vector2.zero && position.width > 100)
             {
                 ResetView();
-                // Create a test node at (0,0) if no graph is loaded
+                // Create a new graph with default nodes if none is loaded
                 if (currentGraph == null)
                 {
                     CreateNewGraph();
-                    if (currentGraph != null && currentGraph.graphData.nodes.Count == 0)
-                    {
-                        var testNode = new NodeData(new Vector2Int(0, 0), NodeType.Normal);
-                        currentGraph.graphData.nodes.Add(testNode);
-                        EditorUtility.SetDirty(currentGraph);
-                    }
                 }
             }
             
@@ -123,6 +295,19 @@ namespace Editor
                 SaveGraph();
             }
 
+            // Undo/Redo buttons
+            GUI.enabled = undoStack.Count > 0;
+            if (GUILayout.Button("Undo", EditorStyles.toolbarButton, GUILayout.Width(50)))
+            {
+                Undo();
+            }
+            GUI.enabled = redoStack.Count > 0;
+            if (GUILayout.Button("Redo", EditorStyles.toolbarButton, GUILayout.Width(50)))
+            {
+                Redo();
+            }
+            GUI.enabled = true;
+
             // Clear button
             if (GUILayout.Button("Clear", EditorStyles.toolbarButton))
             {
@@ -138,7 +323,104 @@ namespace Editor
             // Grid toggle
             showGrid = GUILayout.Toggle(showGrid, "Grid", EditorStyles.toolbarButton);
             
-            // Edge creation mode toggle
+            // Mode selection
+            GUILayout.Space(10);
+            GUILayout.Label("Mode:", EditorStyles.toolbarButton, GUILayout.Width(40));
+            
+            // Create custom button styles for each mode
+            var selectStyle = new GUIStyle(EditorStyles.toolbarButton);
+            var nodeStyle = new GUIStyle(EditorStyles.toolbarButton);
+            var edgeStyle = new GUIStyle(EditorStyles.toolbarButton);
+            var deleteStyle = new GUIStyle(EditorStyles.toolbarButton);
+            var moveStyle = new GUIStyle(EditorStyles.toolbarButton);
+            
+            // Set active state colors
+            if (currentMode == EditorMode.Select)
+            {
+                selectStyle.normal.textColor = Color.white;
+                selectStyle.active.textColor = Color.white;
+                selectStyle.normal.background = EditorGUIUtility.whiteTexture;
+            }
+            else
+            {
+                selectStyle.normal.textColor = Color.gray;
+            }
+            
+            if (currentMode == EditorMode.CreateNode)
+            {
+                nodeStyle.normal.textColor = Color.white;
+                nodeStyle.active.textColor = Color.white;
+                nodeStyle.normal.background = EditorGUIUtility.whiteTexture;
+            }
+            else
+            {
+                nodeStyle.normal.textColor = Color.gray;
+            }
+            
+            if (currentMode == EditorMode.CreateEdge)
+            {
+                edgeStyle.normal.textColor = Color.white;
+                edgeStyle.active.textColor = Color.white;
+                edgeStyle.normal.background = EditorGUIUtility.whiteTexture;
+            }
+            else
+            {
+                edgeStyle.normal.textColor = Color.gray;
+            }
+            
+            if (currentMode == EditorMode.Delete)
+            {
+                deleteStyle.normal.textColor = Color.white;
+                deleteStyle.active.textColor = Color.white;
+                deleteStyle.normal.background = EditorGUIUtility.whiteTexture;
+            }
+            else
+            {
+                deleteStyle.normal.textColor = Color.gray;
+            }
+            
+            if (currentMode == EditorMode.Move)
+            {
+                moveStyle.normal.textColor = Color.white;
+                moveStyle.active.textColor = Color.white;
+                moveStyle.normal.background = EditorGUIUtility.whiteTexture;
+            }
+            else
+            {
+                moveStyle.normal.textColor = Color.gray;
+            }
+            
+            if (GUILayout.Button("Select", selectStyle, GUILayout.Width(50)))
+            {
+                currentMode = EditorMode.Select;
+                modeFeedback = "Select Mode: Click to select nodes/edges";
+            }
+            
+            if (GUILayout.Button("Node", nodeStyle, GUILayout.Width(50)))
+            {
+                currentMode = EditorMode.CreateNode;
+                modeFeedback = "Node Mode: Click to create nodes";
+            }
+            
+            if (GUILayout.Button("Edge", edgeStyle, GUILayout.Width(50)))
+            {
+                currentMode = EditorMode.CreateEdge;
+                modeFeedback = "Edge Mode: Click nodes to create edges";
+            }
+            
+            if (GUILayout.Button("Delete", deleteStyle, GUILayout.Width(50)))
+            {
+                currentMode = EditorMode.Delete;
+                modeFeedback = "Delete Mode: Click to delete nodes/edges";
+            }
+            
+            if (GUILayout.Button("Move", moveStyle, GUILayout.Width(50)))
+            {
+                currentMode = EditorMode.Move;
+                modeFeedback = "Move Mode: Drag nodes to move them";
+            }
+            
+            // Edge creation mode toggle (legacy)
             edgeCreationMode = GUILayout.Toggle(edgeCreationMode, "Edge Mode", EditorStyles.toolbarButton);
             
             // Zoom controls
@@ -238,51 +520,60 @@ namespace Editor
 
                     if (e.button == 0) // Left click
                     {
-                        if (e.control) // Ctrl + Left click to create node
+                        switch (currentMode)
                         {
-                            CreateNodeAtPosition(transformedMousePos);
-                            e.Use();
-                        }
-                        else if (e.shift) // Shift + Left click to start edge creation
-                        {
-                            StartEdgeCreation(transformedMousePos);
-                            e.Use();
-                        }
-                        else // Normal click to select, complete edge creation, or start dragging
-                        {
-                            if (isCreatingEdge && edgeStartNode != null)
-                            {
-                                CompleteEdgeCreation(transformedMousePos);
-                                e.Use();
-                            }
-                            else if (edgeCreationMode)
-                            {
-                                // Edge creation mode - click to create edges
-                                HandleEdgeModeClick(transformedMousePos);
-                                e.Use();
-                            }
-                            else
-                            {
-                                // First try to select something
+                            case EditorMode.Select:
                                 SelectAtPosition(transformedMousePos);
-                                
-                                // If we selected a node, start dragging it
                                 if (selectedNode != null)
                                 {
                                     StartNodeDrag(transformedMousePos);
                                 }
                                 else
                                 {
-                                    // If nothing was selected, start panning
                                     isDragging = true;
                                     lastMousePosition = e.mousePosition;
-                                    // Store current selection to restore after pan
                                     lastSelectedNode = selectedNode;
                                     lastSelectedEdge = selectedEdge;
                                 }
-                                e.Use();
-                            }
+                                break;
+                                
+                            case EditorMode.CreateNode:
+                                CreateNodeAtPosition(transformedMousePos);
+                                modeFeedback = $"Node created at {GetNodeIdFromScreenPosition(transformedMousePos)}";
+                                break;
+                                
+                            case EditorMode.CreateEdge:
+                                HandleEdgeModeClick(transformedMousePos);
+                                break;
+                                
+                            case EditorMode.Delete:
+                                var nodeToDelete = FindNodeAtPosition(transformedMousePos);
+                                var edgeToDelete = FindEdgeAtPosition(transformedMousePos);
+                                
+                                if (nodeToDelete != null)
+                                {
+                                    DeleteNode(nodeToDelete);
+                                    modeFeedback = $"Node deleted at {nodeToDelete.id}";
+                                }
+                                else if (edgeToDelete != null)
+                                {
+                                    var command = new DeleteEdgeCommand(currentGraph.graphData, edgeToDelete);
+                                    ExecuteCommand(command);
+                                    modeFeedback = $"Edge deleted from {edgeToDelete.fromId} to {edgeToDelete.toId}";
+                                }
+                                break;
+                                
+                            case EditorMode.Move:
+                                var nodeToMove = FindNodeAtPosition(transformedMousePos);
+                                if (nodeToMove != null)
+                                {
+                                    selectedNode = nodeToMove;
+                                    StartNodeDrag(transformedMousePos);
+                                    modeFeedback = $"Moving node at {nodeToMove.id}";
+                                }
+                                break;
                         }
+                        e.Use();
                     }
                     else if (e.button == 1) // Right click
                     {
@@ -355,6 +646,29 @@ namespace Editor
                     // Keyboard shortcuts for zoom and pan
                     switch (e.keyCode)
                     {
+                        case KeyCode.Z:
+                            if (e.control)
+                            {
+                                if (e.shift)
+                                {
+                                    Redo();
+                                }
+                                else
+                                {
+                                    Undo();
+                                }
+                                e.Use();
+                            }
+                            break;
+                            
+                        case KeyCode.Y:
+                            if (e.control)
+                            {
+                                Redo();
+                                e.Use();
+                            }
+                            break;
+                            
                         case KeyCode.Equals: // Plus key
                         case KeyCode.KeypadPlus:
                             if (e.control)
@@ -421,7 +735,17 @@ namespace Editor
         {
             float inspectorWidth = 300f;
             float graphAreaWidth = position.width - inspectorWidth;
-            panOffset = new Vector2(inspectorWidth + graphAreaWidth / 2, position.height / 2);
+            
+            // Toolbar height (fallback to 20 if toolbar style not yet initialised)
+            float toolbarHeight = EditorStyles.toolbar.fixedHeight;
+            if (toolbarHeight <= 0f) toolbarHeight = 20f;
+            float graphAreaHeight = position.height - toolbarHeight;
+            
+            // Center (0,0) in the middle of the graph area (ignoring inspector)
+            panOffset = new Vector2(
+                graphAreaWidth / 2f,
+                toolbarHeight + graphAreaHeight / 2f
+            );
             zoom = 1f;
         }
 
@@ -522,10 +846,10 @@ namespace Editor
             // Draw nodes on top
             DrawNodes(graphRect);
 
-            // Draw edge creation preview on top
-            if ((isCreatingEdge || edgeCreationMode) && edgeStartNode != null)
+            // Draw mode feedback
+            if (!string.IsNullOrEmpty(modeFeedback))
             {
-                DrawEdgePreview();
+                DrawModeFeedback();
             }
 
             // Reset matrix
@@ -655,18 +979,6 @@ namespace Editor
             }
         }
 
-        private void DrawEdgePreview()
-        {
-            if (edgeStartNode == null) return;
-
-            var startPos = GetNodeScreenPosition(edgeStartNode);
-            var endPos = TransformMousePosition(mousePosition);
-            var edgeColor = Color.yellow;
-            var width = Mathf.Max(currentGraph.edgeWidth * 3f, 12f / zoom); // Adjust width for zoom
-
-            DrawLine(startPos, endPos, edgeColor, width);
-        }
-
         private void DrawDragPreview()
         {
             if (draggedNode == null) return;
@@ -787,7 +1099,7 @@ namespace Editor
             var nodeData = currentGraph?.graphData?.nodes?.FirstOrDefault(n => n.id == nodeId);
             if (nodeData != null)
             {
-                return nodeData.GetWorldPosition();
+                return nodeData.GetWorldPosition(gridSize);
             }
             return new Vector2(nodeId.x * gridSize, -nodeId.y * gridSize);
         }
@@ -830,10 +1142,10 @@ namespace Editor
                 return;
 
             var newNode = new NodeData(nodeId, NodeType.Normal);
-            currentGraph.graphData.nodes.Add(newNode);
+            var command = new AddNodeCommand(currentGraph.graphData, newNode);
+            ExecuteCommand(command);
             selectedNode = newNode;
             selectedEdge = null;
-            EditorUtility.SetDirty(currentGraph);
         }
 
         private void StartEdgeCreation(Vector2 screenPos)
@@ -868,7 +1180,11 @@ namespace Editor
         {
             var clickedNode = FindNodeAtPosition(screenPos);
             
-            if (clickedNode == null) return;
+            if (clickedNode == null) 
+            {
+                modeFeedback = "No node found at click position";
+                return;
+            }
             
             if (edgeStartNode == null)
             {
@@ -876,12 +1192,14 @@ namespace Editor
                 edgeStartNode = clickedNode;
                 selectedNode = clickedNode;
                 selectedEdge = null;
+                modeFeedback = $"Edge creation started from {clickedNode.id}. Click another node to complete.";
                 CheckSelectionChange();
             }
             else if (edgeStartNode != clickedNode)
             {
                 // Complete edge creation
                 CreateEdge(edgeStartNode, clickedNode);
+                modeFeedback = $"Edge created from {edgeStartNode.id} to {clickedNode.id}";
                 edgeStartNode = null;
                 selectedNode = clickedNode;
                 CheckSelectionChange();
@@ -891,6 +1209,7 @@ namespace Editor
                 // Clicked the same node - cancel edge creation
                 edgeStartNode = null;
                 selectedNode = clickedNode;
+                modeFeedback = "Edge creation cancelled";
                 CheckSelectionChange();
             }
         }
@@ -1026,6 +1345,13 @@ namespace Editor
 
         private void EndNodeDrag()
         {
+            if (isDraggingNode && draggedNode != null)
+            {
+                // Create move command for the final position
+                var command = new MoveNodeCommand(draggedNode, draggedNode.id);
+                ExecuteCommand(command);
+            }
+            
             isDraggingNode = false;
             draggedNode = null;
         }
@@ -1078,8 +1404,17 @@ namespace Editor
             if (existingNode != null)
             {
                 // Node context menu
-                menu.AddItem(new GUIContent("Delete Node"), false, () => DeleteNode(existingNode));
-                menu.AddSeparator("");
+                if (existingNode.type != NodeType.Start && existingNode.type != NodeType.Goal)
+                {
+                    menu.AddItem(new GUIContent("Delete Node"), false, () => DeleteNode(existingNode));
+                    menu.AddSeparator("");
+                }
+                else
+                {
+                    // Disable deletion for Start and Goal nodes
+                    menu.AddDisabledItem(new GUIContent("Delete Node"));
+                    menu.AddSeparator("");
+                }
                 
                 foreach (NodeType nodeType in System.Enum.GetValues(typeof(NodeType)))
                 {
@@ -1098,18 +1433,24 @@ namespace Editor
 
         private void DeleteNode(NodeData node)
         {
+            if (node == null) return;
+
+            // Prevent deletion of Start and Goal nodes
+            if (node.type == NodeType.Start || node.type == NodeType.Goal)
+            {
+                Debug.LogWarning("Start and Goal nodes cannot be deleted.");
+                return;
+            }
+
             if (currentGraph?.graphData == null) return;
 
-            currentGraph.graphData.nodes.Remove(node);
-            
-            // Remove connected edges
-            currentGraph.graphData.edges.RemoveAll(e => e.fromId == node.id || e.toId == node.id);
+            var command = new DeleteNodeCommand(currentGraph.graphData, node);
+            ExecuteCommand(command);
             
             if (selectedNode == node) selectedNode = null;
             if (edgeStartNode == node) edgeStartNode = null;
             
             CheckSelectionChange();
-            EditorUtility.SetDirty(currentGraph);
         }
 
         private void SetNodeType(NodeData node, NodeType type)
@@ -1127,6 +1468,13 @@ namespace Editor
             if (!string.IsNullOrEmpty(path))
             {
                 currentGraph = CreateInstance<GraphScriptableObject>();
+
+                // Add default Start and Goal nodes (no edges)
+                var startNode = new NodeData(new Vector2Int(0, 0), NodeType.Start);
+                var goalNode  = new NodeData(new Vector2Int(2, 0),  NodeType.Goal);
+                currentGraph.graphData.nodes.Add(startNode);
+                currentGraph.graphData.nodes.Add(goalNode);
+
                 AssetDatabase.CreateAsset(currentGraph, path);
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
@@ -1213,9 +1561,13 @@ namespace Editor
                     
                     EditorGUILayout.Space();
                     
-                    if (GUILayout.Button("Delete Node"))
+                    // Show Delete button only if node is NOT Start or Goal
+                    if (selectedNode.type != NodeType.Start && selectedNode.type != NodeType.Goal)
                     {
-                        DeleteNode(selectedNode);
+                        if (GUILayout.Button("Delete Node"))
+                        {
+                            DeleteNode(selectedNode);
+                        }
                     }
                 }
                 
@@ -1232,10 +1584,10 @@ namespace Editor
                     
                     if (GUILayout.Button("Delete Edge"))
                     {
-                        currentGraph.graphData.edges.Remove(selectedEdge);
+                        var command = new DeleteEdgeCommand(currentGraph.graphData, selectedEdge);
+                        ExecuteCommand(command);
                         selectedEdge = null;
                         CheckSelectionChange();
-                        EditorUtility.SetDirty(currentGraph);
                     }
                 }
                 
@@ -1380,13 +1732,63 @@ namespace Editor
                 return;
 
             var newEdge = new EdgeData(from.id, to.id, EdgeType.Standard);
-            currentGraph.graphData.edges.Add(newEdge);
+            var command = new AddEdgeCommand(currentGraph.graphData, newEdge);
+            ExecuteCommand(command);
             selectedEdge = newEdge;
             selectedNode = null;
-            EditorUtility.SetDirty(currentGraph);
             
             CheckSelectionChange();
             Debug.Log($"Edge created from {from.id} to {to.id}");
+        }
+
+        private void DrawModeFeedback()
+        {
+            // Reset matrix for UI drawing
+            GUI.matrix = Matrix4x4.identity;
+            
+            var style = new GUIStyle(EditorStyles.label)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = 12,
+                normal = { textColor = Color.yellow },
+                fontStyle = FontStyle.Bold
+            };
+            
+            var rect = new Rect(10, position.height - 40, position.width - 320, 30);
+            GUI.Box(rect, "");
+            EditorGUI.LabelField(rect, modeFeedback, style);
+        }
+
+        private void ExecuteCommand(ICommand command)
+        {
+            command.Execute();
+            undoStack.Push(command);
+            redoStack.Clear(); // Clear redo stack when new command is executed
+            EditorUtility.SetDirty(currentGraph);
+        }
+
+        private void Undo()
+        {
+            if (undoStack.Count > 0)
+            {
+                var command = undoStack.Pop();
+                command.Undo();
+                redoStack.Push(command);
+                EditorUtility.SetDirty(currentGraph);
+                modeFeedback = "Undo executed";
+            }
+        }
+
+        private void Redo()
+        {
+            if (redoStack.Count > 0)
+            {
+                var command = redoStack.Pop();
+                command.Execute();
+                undoStack.Push(command);
+                EditorUtility.SetDirty(currentGraph);
+                modeFeedback = "Redo executed";
+            }
         }
     }
 } 

@@ -12,11 +12,93 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3cb5178ce6c73aa4e82fb24b025b2d09, type: 3}
   m_Name: Graph1
   m_EditorClassIdentifier: 
-  graphName: Graph1
+  graphName: Level1
   description: 
   graphData:
-    nodes: []
-    edges: []
+    nodes:
+    - id: {x: 1, y: -2}
+      type: 1
+      isDestroyed: 0
+    - id: {x: 4, y: -2}
+      type: 2
+      isDestroyed: 0
+    - id: {x: 2, y: -2}
+      type: 0
+      isDestroyed: 0
+    - id: {x: 2, y: -1}
+      type: 0
+      isDestroyed: 0
+    - id: {x: 2, y: -3}
+      type: 0
+      isDestroyed: 0
+    - id: {x: 3, y: -2}
+      type: 6
+      isDestroyed: 0
+    - id: {x: 4, y: -1}
+      type: 0
+      isDestroyed: 0
+    - id: {x: 4, y: -3}
+      type: 0
+      isDestroyed: 0
+    - id: {x: 3, y: -1}
+      type: 6
+      isDestroyed: 0
+    - id: {x: 3, y: -3}
+      type: 6
+      isDestroyed: 0
+    edges:
+    - fromId: {x: 1, y: -2}
+      toId: {x: 2, y: -2}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 2, y: -2}
+      toId: {x: 2, y: -1}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 2, y: -2}
+      toId: {x: 2, y: -3}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 2, y: -2}
+      toId: {x: 3, y: -2}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 3, y: -2}
+      toId: {x: 4, y: -2}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 2, y: -1}
+      toId: {x: 3, y: -1}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 3, y: -2}
+      toId: {x: 3, y: -1}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 4, y: -1}
+      toId: {x: 3, y: -1}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 4, y: -1}
+      toId: {x: 4, y: -2}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 4, y: -2}
+      toId: {x: 4, y: -3}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 3, y: -3}
+      toId: {x: 4, y: -3}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 3, y: -3}
+      toId: {x: 3, y: -2}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 3, y: -3}
+      toId: {x: 2, y: -3}
+      type: 0
+      isUsed: 0
     graphName: Graph1
   nodeSize: 1
   edgeWidth: 0.1
