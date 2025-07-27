@@ -25,6 +25,11 @@ namespace Gameplay.Graph
                 node.Destroy();
             return node;
         }
+
+        public Vector2 GetWorldPosition(float gridSize = 50f)
+        {
+            return new Vector2(id.x * gridSize, -id.y * gridSize);
+        }
     }
 
     [Serializable]

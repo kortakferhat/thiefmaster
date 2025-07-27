@@ -13,8 +13,8 @@ namespace Gameplay.Graph
         public GraphData graphData = new();
 
         [Header("Editor Settings")]
-        public float nodeSize = 1f;
-        public float edgeWidth = 0.1f;
+        public float nodeSize = 30f;
+        public float edgeWidth = 6f;
         public Color startNodeColor = Color.green;
         public Color goalNodeColor = Color.red;
         public Color normalNodeColor = Color.white;
