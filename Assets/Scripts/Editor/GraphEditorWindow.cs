@@ -73,11 +73,7 @@ namespace Editor
             // Initialize pan offset on first GUI call when window is properly sized
             if (panOffset == Vector2.zero && position.width > 100)
             {
-                float inspectorWidth = 300f;
-                float graphAreaWidth = position.width - inspectorWidth;
-                float graphAreaHeight = position.height;
-                // Center (0,0) in the middle of the graph area
-                panOffset = new Vector2(inspectorWidth + graphAreaWidth / 2, graphAreaHeight / 2);
+                ResetView();
                 // Create a test node at (0,0) if no graph is loaded
                 if (currentGraph == null)
                 {
@@ -92,8 +88,10 @@ namespace Editor
             }
             
             DrawToolbar();
-            DrawMainArea();
+            EditorGUILayout.BeginHorizontal();
+            DrawGraphArea();
             DrawInspector();
+            EditorGUILayout.EndHorizontal();
         }
 
         private void DrawToolbar()
@@ -186,10 +184,7 @@ namespace Editor
             
             if (GUILayout.Button("Reset", EditorStyles.toolbarButton, GUILayout.Width(50)))
             {
-                float inspectorWidth = 300f;
-                float graphAreaWidth = position.width - inspectorWidth;
-                panOffset = new Vector2(inspectorWidth + graphAreaWidth / 2, position.height / 2);
-                zoom = 1f;
+                ResetView();
                 // Clear GUI focus to ensure selection works after reset
                 GUI.FocusControl(null);
                 Repaint();
@@ -204,10 +199,8 @@ namespace Editor
             EditorGUILayout.EndHorizontal();
         }
 
-        private void DrawMainArea()
+        private void DrawGraphArea()
         {
-            EditorGUILayout.BeginHorizontal();
-
             // Main graph area
             EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
             
@@ -226,8 +219,6 @@ namespace Editor
             }
             
             EditorGUILayout.EndVertical();
-
-            EditorGUILayout.EndHorizontal();
         }
 
         private void HandleInput(Rect graphRect)
@@ -405,10 +396,7 @@ namespace Editor
                             
                         case KeyCode.Home:
                             // Reset view - center (0,0) on graph area
-                            var graphAreaWidth3 = position.width - 300; // Inspector width is 300
-                            var centerPos2 = new Vector2(graphAreaWidth3 / 2, position.height / 2);
-                            panOffset = centerPos2;
-                            zoom = 1f;
+                            ResetView();
                             // Clear GUI focus to ensure selection works after reset
                             GUI.FocusControl(null);
                             Repaint();
@@ -427,6 +415,14 @@ namespace Editor
             
             // Handle touch input for mobile devices
             HandleTouchInput(graphRect);
+        }
+
+        private void ResetView()
+        {
+            float inspectorWidth = 300f;
+            float graphAreaWidth = position.width - inspectorWidth;
+            panOffset = new Vector2(inspectorWidth + graphAreaWidth / 2, position.height / 2);
+            zoom = 1f;
         }
 
         private void HandleTouchInput(Rect graphRect)
@@ -541,16 +537,20 @@ namespace Editor
             var gridColor = new Color(0.3f, 0.3f, 0.5f, 0.5f);
             var gridWorldSize = gridSize;
 
-            // Grid çizgilerini ekranın ortasından başlat
-            var screenCenter = new Vector2(graphRect.width / 2, graphRect.height / 2);
+            // Since GUI.matrix is already applied, we need to work in world coordinates directly
+            // Calculate the visible world area based on the screen rect and current transform
+            var matrix = Matrix4x4.TRS(panOffset, Quaternion.identity, Vector3.one * zoom);
+            var inverseMatrix = matrix.inverse;
             
-            // Grid çizgilerinin başlangıç pozisyonunu ekranın ortasına ayarla
-            var gridStartX = -screenCenter.x;
-            var gridStartY = -screenCenter.y;
-            var gridEndX = screenCenter.x;
-            var gridEndY = screenCenter.y;
+            var screenTopLeft = inverseMatrix.MultiplyPoint3x4(new Vector3(graphRect.xMin, graphRect.yMin, 0));
+            var screenBottomRight = inverseMatrix.MultiplyPoint3x4(new Vector3(graphRect.xMax, graphRect.yMax, 0));
 
-            // Grid çizgilerini grid boyutuna göre hizala
+            var gridStartX = screenTopLeft.x;
+            var gridStartY = screenTopLeft.y;
+            var gridEndX = screenBottomRight.x;
+            var gridEndY = screenBottomRight.y;
+
+            // Align grid lines to the grid size
             gridStartX = Mathf.Floor(gridStartX / gridWorldSize) * gridWorldSize;
             gridStartY = Mathf.Floor(gridStartY / gridWorldSize) * gridWorldSize;
             gridEndX = Mathf.Ceil(gridEndX / gridWorldSize) * gridWorldSize;
