@@ -1,7 +1,10 @@
+using Gameplay.Graph;
 using Gameplay.Items;
 using Infrastructure.Components;
 using Infrastructure.Managers;
 using Infrastructure.Managers.EconomyManager;
+
+using Infrastructure.Managers.LevelManager;
 using Infrastructure.Managers.PoolManager;
 using Infrastructure.Managers.TooltipManager;
 using TowerClicker.Infrastructure;
@@ -13,6 +16,9 @@ namespace Gameplay.Bootstrapper
 {
     public class GameBootstrapper : MonoBehaviour, IBootstrapper
     {
+        [SerializeField] private LevelManagerTester levelManagerTester;
+        
+        
         private Transform managersParent;
         [SerializeField] private Camera topCamera;
         [SerializeField] private Gameplay.Character.CharacterController characterController;
@@ -43,6 +49,10 @@ namespace Gameplay.Bootstrapper
             var economyManager = new EconomyManager(0);
             ServiceLocator.Register<IEconomyManager>(economyManager);
             
+            var levelManager = new LevelManager();
+            await levelManager.Initialize();
+            ServiceLocator.Register<ILevelManager>(levelManager);
+            
             var poolManager = Instantiate(new GameObject("PoolManager"), managersParent).AddComponent<PoolManager>();
             await poolManager.Initialize();
             ServiceLocator.Register<IPoolManager>(poolManager);
@@ -72,6 +82,9 @@ namespace Gameplay.Bootstrapper
             gameManager.StartGame();
             
             mainMenuBootstrapper.Initialize();
+            
+            // TODO: REMOVE TEST CHANGES
+            levelManagerTester.Initialize();
         }
     }
 }

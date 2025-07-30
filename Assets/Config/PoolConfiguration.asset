@@ -19,3 +19,36 @@ MonoBehaviour:
   - tag: Coin
     prefab: {fileID: 2095859713536135509, guid: fa7b4ce9e135345ef8e8efb912ad70ce, type: 3}
     size: 10
+  - tag: BaseNode
+    prefab: {fileID: 4136262835402645569, guid: 230acf50ce8184fdeab35a85d57ddd6b, type: 3}
+    size: 10
+  - tag: BreakableNode
+    prefab: {fileID: 3011014746921663609, guid: 4952a7079457d45b2a0cc12bb78e9f06, type: 3}
+    size: 10
+  - tag: EnemyNode
+    prefab: {fileID: 8098931836330445700, guid: 1a7802de21bfe4441883ae506526afcf, type: 3}
+    size: 10
+  - tag: GoalNode
+    prefab: {fileID: 7040228629868182436, guid: 459aa57ecb5da416dbc295010cea6eaf, type: 3}
+    size: 10
+  - tag: RedirectorNode
+    prefab: {fileID: 5692061294566704056, guid: 29d5a89e1d16c417891745e567fc9e76, type: 3}
+    size: 10
+  - tag: StartNode
+    prefab: {fileID: 8114718201742273114, guid: 90169fddf72a84cb180af08e7b71c693, type: 3}
+    size: 10
+  - tag: TrapNode
+    prefab: {fileID: 3986345807468728440, guid: cb812f6beaf324388abc6ac8542ebb0a, type: 3}
+    size: 10
+  - tag: BaseEdge
+    prefab: {fileID: 9111183773396360677, guid: 002ac4afb635e40e196e20bfd3b692f6, type: 3}
+    size: 10
+  - tag: BreakableEdge
+    prefab: {fileID: 8369424835675555669, guid: 2d2e28b830d0141c089d493e6e0fa1b8, type: 3}
+    size: 10
+  - tag: DirectedEdge
+    prefab: {fileID: 7581773812824740024, guid: 5298a54c0b423460b95e75719b1e1fce, type: 3}
+    size: 10
+  - tag: SlipperyEdge
+    prefab: {fileID: 7663685935667842189, guid: d7d53f79a78f0446fb2913147a4f898d, type: 3}
+    size: 10
