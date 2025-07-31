@@ -141,6 +141,41 @@ namespace Gameplay.Graph
             }
         }
         
+        [Button("Rotate Right (Default)")]
+        public void RotateRight()
+        {
+            Debug.Log("Setting level rotation to Right (0°)...");
+            _levelManager?.SetLevelRotation(LevelRotation.Right);
+        }
+        
+        [Button("Rotate Down")]
+        public void RotateDown()
+        {
+            Debug.Log("Setting level rotation to Down (90°)...");
+            _levelManager?.SetLevelRotation(LevelRotation.Down);
+        }
+        
+        [Button("Rotate Left")]
+        public void RotateLeft()
+        {
+            Debug.Log("Setting level rotation to Left (180°)...");
+            _levelManager?.SetLevelRotation(LevelRotation.Left);
+        }
+        
+        [Button("Rotate Up")]
+        public void RotateUp()
+        {
+            Debug.Log("Setting level rotation to Up (270°)...");
+            _levelManager?.SetLevelRotation(LevelRotation.Up);
+        }
+        
+        [Button("Get Current Rotation")]
+        public void GetCurrentRotation()
+        {
+            var rotation = _levelManager?.GetCurrentRotation();
+            Debug.Log($"Current level rotation: {rotation} ({(float)(rotation ?? LevelRotation.Right)}°)");
+        }
+        
         #endregion
         
         #region Event Handlers

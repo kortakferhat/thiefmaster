@@ -37,16 +37,7 @@ namespace Infrastructure.Managers.LevelManager
             {
                 // Load GridConfig from Addressables
                 _gridConfig = await Addressables.LoadAssetAsync<GridConfig>("GridConfig").ToUniTask();
-                
-                if (_gridConfig != null)
-                {
-                    Debug.Log("GridConfig loaded successfully from Addressables");
-                }
-                else
-                {
-                    Debug.LogWarning("GridConfig not found in Addressables, creating default config");
-                    _gridConfig = ScriptableObject.CreateInstance<GridConfig>();
-                }
+                Debug.Log("GridConfig loaded successfully from Addressables");
             }
             catch (Exception ex)
             {
@@ -69,16 +60,8 @@ namespace Infrastructure.Managers.LevelManager
             try
             {
                 var levelGraph = await Addressables.LoadAssetAsync<GraphScriptableObject>(levelKey).ToUniTask();
-                
-                if (levelGraph != null)
-                {
-                    _currentLevel = levelIndex;
-                    LoadLevel(levelGraph);
-                }
-                else
-                {
-                    Debug.LogError($"Failed to load level {levelIndex} with key '{levelKey}'");
-                }
+                _currentLevel = levelIndex;
+                LoadLevel(levelGraph);
             }
             catch (Exception ex)
             {
@@ -88,12 +71,6 @@ namespace Infrastructure.Managers.LevelManager
 
         public void LoadLevel(GraphScriptableObject levelGraph)
         {
-            if (levelGraph == null)
-            {
-                Debug.LogError("Cannot load null level graph");
-                return;
-            }
-            
             _currentLevelGraph = levelGraph;
             
             // Generate the grid
@@ -120,15 +97,8 @@ namespace Infrastructure.Managers.LevelManager
 
         public void RestartLevel()
         {
-            if (_currentLevelGraph != null)
-            {
-                OnLevelLoaded?.Invoke(_currentLevelGraph);
-                Debug.Log($"Level {_currentLevel} restarted");
-            }
-            else
-            {
-                Debug.LogWarning("No current level to restart");
-            }
+            OnLevelLoaded?.Invoke(_currentLevelGraph);
+            Debug.Log($"Level {_currentLevel} restarted");
         }
 
         public void NextLevel()
@@ -140,8 +110,7 @@ namespace Infrastructure.Managers.LevelManager
 
         private void InitializeGridSystem()
         {
-            if (_poolManager == null)
-                _poolManager = ServiceLocator.Get<IPoolManager>();
+            _poolManager ??= ServiceLocator.Get<IPoolManager>();
                 
             if (_gridParent == null)
             {
@@ -169,13 +138,6 @@ namespace Infrastructure.Managers.LevelManager
         {
             InitializeGridSystem();
             ClearGrid();
-            
-            if (_currentLevelGraph == null) return;
-            if (_gridConfig == null)
-            {
-                Debug.LogError("GridConfig is null! Make sure LevelManager.Initialize() was called.");
-                return;
-            }
 
             var graph = _currentLevelGraph.CreateGraph();
             
@@ -185,8 +147,15 @@ namespace Infrastructure.Managers.LevelManager
             // Generate edges
             GenerateEdges(graph);
             
+            // Apply rotation to the grid parent object
+            ApplyGridRotation();
+            
+            var gridCenter = GetGridCenter();
             Debug.Log($"Grid generated with {_spawnedNodes.Count} nodes and {_spawnedEdges.Count} edges");
-            Debug.Log($"Hierarchy: {_gridParent?.name} -> Nodes: {_nodesParent?.name} ({_nodesParent?.childCount} children), Edges: {_edgesParent?.name} ({_edgesParent?.childCount} children)");
+            Debug.Log($"Level Rotation: {_gridConfig.levelRotation} ({(float)_gridConfig.levelRotation}°)");
+            Debug.Log($"Grid Center: ({gridCenter.x}, {gridCenter.y}) - Grid is centered around origin");
+            Debug.Log($"Grid Parent Rotation: {_gridParent.rotation.eulerAngles}");
+            Debug.Log($"Hierarchy: {_gridParent.name} -> Nodes: {_nodesParent.name} ({_nodesParent.childCount} children), Edges: {_edgesParent.name} ({_edgesParent.childCount} children)");
         }
 
         private void GenerateNodes(Graph graph)
@@ -197,12 +166,9 @@ namespace Infrastructure.Managers.LevelManager
                 var poolKey = GetNodePoolKey(nodeData.type);
                 var nodeObj = _poolManager.Spawn(poolKey, _nodesParent, worldPos, Quaternion.identity);
                 
-                if (nodeObj != null)
-                {
-                    // Name the node based on its type and ID
-                    nodeObj.name = $"{nodeData.type}Node_({nodeData.id.x},{nodeData.id.y})";
-                    _spawnedNodes.Add(nodeObj);
-                }
+                // Name the node based on its type and ID
+                nodeObj.name = $"{nodeData.type}Node_({nodeData.id.x},{nodeData.id.y})";
+                _spawnedNodes.Add(nodeObj);
             }
         }
 
@@ -221,63 +187,91 @@ namespace Infrastructure.Managers.LevelManager
                 var poolKey = GetEdgePoolKey(edgeData.type);
                 var edgeObj = _poolManager.Spawn(poolKey, _edgesParent, centerPos, rotation);
                 
-                if (edgeObj != null)
-                {
-                    // Name the edge based on its type and connection IDs
-                    edgeObj.name = $"{edgeData.type}Edge_({edgeData.fromId.x},{edgeData.fromId.y})_to_({edgeData.toId.x},{edgeData.toId.y})";
-                    
-                    // Scale edge to match distance
-                    var distance = Vector3.Distance(fromPos, toPos);
-                    edgeObj.transform.localScale = new Vector3(_gridConfig.edgeWidth, _gridConfig.edgeWidth, distance);
-                    _spawnedEdges.Add(edgeObj);
-                }
+                // Name the edge based on its type and connection IDs
+                edgeObj.name = $"{edgeData.type}Edge_({edgeData.fromId.x},{edgeData.fromId.y})_to_({edgeData.toId.x},{edgeData.toId.y})";
+                
+                // Scale edge to match distance
+                var distance = Vector3.Distance(fromPos, toPos);
+                edgeObj.transform.localScale = new Vector3(_gridConfig.edgeWidth, _gridConfig.edgeWidth, distance);
+                _spawnedEdges.Add(edgeObj);
             }
         }
 
         private Vector3 GetNodeWorldPosition(Vector2Int nodeId)
         {
-            return new Vector3(
-                nodeId.x * _gridConfig.gridSpacing,
+            // Calculate grid center offset to keep grid centered
+            Vector2Int gridCenter = GetGridCenter();
+            
+            // Base position relative to grid center (no rotation applied here)
+            Vector3 basePosition = new Vector3(
+                (nodeId.x - gridCenter.x) * _gridConfig.gridSpacing,
                 _gridConfig.nodeYPosition,
-                -nodeId.y * _gridConfig.gridSpacing
+                -(nodeId.y - gridCenter.y) * _gridConfig.gridSpacing
             );
+            
+            // Grid rotation will be applied to the parent object instead
+            return basePosition;
+        }
+
+        private Vector2Int GetGridCenter()
+        {
+            var nodes = _currentLevelGraph.graphData.nodes;
+            
+            int minX = nodes[0].id.x, maxX = nodes[0].id.x;
+            int minY = nodes[0].id.y, maxY = nodes[0].id.y;
+            
+            foreach (var node in nodes)
+            {
+                if (node.id.x < minX) minX = node.id.x;
+                if (node.id.x > maxX) maxX = node.id.x;
+                if (node.id.y < minY) minY = node.id.y;
+                if (node.id.y > maxY) maxY = node.id.y;
+            }
+            
+            return new Vector2Int((minX + maxX) / 2, (minY + maxY) / 2);
+        }
+
+        private void ApplyGridRotation()
+        {
+            // Apply rotation to the grid parent object
+            float rotationAngle = (float)_gridConfig.levelRotation;
+            _gridParent.rotation = Quaternion.Euler(0, rotationAngle, 0);
+            
+            Debug.Log($"Applied rotation {rotationAngle}° to grid parent");
         }
 
         private void ClearGrid()
         {
+            // Reset grid parent rotation before clearing
+            _gridParent.rotation = Quaternion.identity;
+            
             // Despawn all nodes - we don't track their types, so try all possible node types
             foreach (var node in _spawnedNodes)
             {
-                if (node != null)
-                {
-                    // Try to despawn with different node types until successful
-                    bool despawned = _poolManager.Despawn(PoolKeys.BaseNode, node) ||
-                                   _poolManager.Despawn(PoolKeys.StartNode, node) ||
-                                   _poolManager.Despawn(PoolKeys.GoalNode, node) ||
-                                   _poolManager.Despawn(PoolKeys.BreakableNode, node) ||
-                                   _poolManager.Despawn(PoolKeys.RedirectorNode, node) ||
-                                   _poolManager.Despawn(PoolKeys.TrapNode, node) ||
-                                   _poolManager.Despawn(PoolKeys.EnemyNode, node);
-                    
-                    if (!despawned)
-                        UnityEngine.Object.Destroy(node);
-                }
+                // Try to despawn with different node types until successful
+                bool despawned = _poolManager.Despawn(PoolKeys.BaseNode, node) ||
+                               _poolManager.Despawn(PoolKeys.StartNode, node) ||
+                               _poolManager.Despawn(PoolKeys.GoalNode, node) ||
+                               _poolManager.Despawn(PoolKeys.BreakableNode, node) ||
+                               _poolManager.Despawn(PoolKeys.RedirectorNode, node) ||
+                               _poolManager.Despawn(PoolKeys.TrapNode, node) ||
+                               _poolManager.Despawn(PoolKeys.EnemyNode, node);
+                
+                if (!despawned)
+                    UnityEngine.Object.Destroy(node);
             }
             _spawnedNodes.Clear();
 
             // Despawn all edges
             foreach (var edge in _spawnedEdges)
             {
-                if (edge != null)
-                {
-                    bool despawned = _poolManager.Despawn(PoolKeys.BaseEdge, edge) ||
-                                   _poolManager.Despawn(PoolKeys.DirectedEdge, edge) ||
-                                   _poolManager.Despawn(PoolKeys.SlipperyEdge, edge) ||
-                                   _poolManager.Despawn(PoolKeys.BreakableEdge, edge);
-                    
-                    if (!despawned)
-                        UnityEngine.Object.Destroy(edge);
-                }
+                bool despawned = _poolManager.Despawn(PoolKeys.BaseEdge, edge) ||
+                               _poolManager.Despawn(PoolKeys.DirectedEdge, edge) ||
+                               _poolManager.Despawn(PoolKeys.SlipperyEdge, edge) ||
+                               _poolManager.Despawn(PoolKeys.BreakableEdge, edge);
+                
+                if (!despawned)
+                    UnityEngine.Object.Destroy(edge);
             }
             _spawnedEdges.Clear();
             
@@ -315,11 +309,26 @@ namespace Infrastructure.Managers.LevelManager
         public void SetGridConfig(GridConfig config)
         {
             Debug.LogWarning("SetGridConfig is deprecated. GridConfig is now loaded from Addressables during Initialize().");
-            if (config != null)
+            Debug.Log("Overriding GridConfig with provided config for testing purposes.");
+            _gridConfig = config;
+        }
+
+        public void SetLevelRotation(LevelRotation rotation)
+        {
+            if (_gridConfig.levelRotation != rotation)
             {
-                Debug.Log("Overriding GridConfig with provided config for testing purposes.");
-                _gridConfig = config;
+                _gridConfig.levelRotation = rotation;
+                Debug.Log($"Level rotation changed to: {rotation} ({(float)rotation}°)");
+                
+                // If we have a current level, regenerate it with new rotation
+                Debug.Log("Regenerating current level with new rotation...");
+                LoadLevel(_currentLevelGraph);
             }
+        }
+
+        public LevelRotation GetCurrentRotation()
+        {
+            return _gridConfig.levelRotation;
         }
 
         public void ResetLevelProgress()
@@ -329,13 +338,10 @@ namespace Infrastructure.Managers.LevelManager
             _currentLevelGraph = null;
             
             // Reset all grid references
-            if (_gridParent != null)
-            {
-                UnityEngine.Object.Destroy(_gridParent.gameObject);
-                _gridParent = null;
-                _nodesParent = null;
-                _edgesParent = null;
-            }
+            UnityEngine.Object.Destroy(_gridParent.gameObject);
+            _gridParent = null;
+            _nodesParent = null;
+            _edgesParent = null;
             
             Debug.Log("Level progress reset");
         }

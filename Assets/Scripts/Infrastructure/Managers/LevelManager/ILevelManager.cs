@@ -23,5 +23,9 @@ namespace Infrastructure.Managers.LevelManager
         void NextLevel();
         void SetGridConfig(GridConfig config);
         void ResetLevelProgress();
+        
+        // Level Rotation Methods
+        void SetLevelRotation(LevelRotation rotation);
+        LevelRotation GetCurrentRotation();
     }
 } 

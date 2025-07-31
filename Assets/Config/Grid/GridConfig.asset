@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gridSpacing: 2
   nodeYPosition: 1
+  levelRotation: 270
   edgeLength: 2
   edgeWidth: 0.1
   edgeYOffset: 0.1
