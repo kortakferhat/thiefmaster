@@ -16,6 +16,8 @@ namespace Infrastructure.Managers.LevelManager
         private GraphScriptableObject _currentLevelGraph;
         private GridConfig _gridConfig;
         private Transform _gridParent;
+        private Transform _nodesParent;
+        private Transform _edgesParent;
         private IPoolManager _poolManager;
         
         private readonly List<GameObject> _spawnedNodes = new();
@@ -146,6 +148,21 @@ namespace Infrastructure.Managers.LevelManager
                 var gridObject = new GameObject("LevelGrid");
                 _gridParent = gridObject.transform;
             }
+            
+            // Always ensure we have nodes and edges parent objects
+            if (_nodesParent == null)
+            {
+                var nodesObject = new GameObject("Nodes");
+                nodesObject.transform.SetParent(_gridParent);
+                _nodesParent = nodesObject.transform;
+            }
+            
+            if (_edgesParent == null)
+            {
+                var edgesObject = new GameObject("Edges");
+                edgesObject.transform.SetParent(_gridParent);
+                _edgesParent = edgesObject.transform;
+            }
         }
 
         private void GenerateGrid()
@@ -169,6 +186,7 @@ namespace Infrastructure.Managers.LevelManager
             GenerateEdges(graph);
             
             Debug.Log($"Grid generated with {_spawnedNodes.Count} nodes and {_spawnedEdges.Count} edges");
+            Debug.Log($"Hierarchy: {_gridParent?.name} -> Nodes: {_nodesParent?.name} ({_nodesParent?.childCount} children), Edges: {_edgesParent?.name} ({_edgesParent?.childCount} children)");
         }
 
         private void GenerateNodes(Graph graph)
@@ -177,10 +195,12 @@ namespace Infrastructure.Managers.LevelManager
             {
                 var worldPos = GetNodeWorldPosition(nodeData.id);
                 var poolKey = GetNodePoolKey(nodeData.type);
-                var nodeObj = _poolManager.Spawn(poolKey, _gridParent, worldPos, Quaternion.identity);
+                var nodeObj = _poolManager.Spawn(poolKey, _nodesParent, worldPos, Quaternion.identity);
                 
                 if (nodeObj != null)
                 {
+                    // Name the node based on its type and ID
+                    nodeObj.name = $"{nodeData.type}Node_({nodeData.id.x},{nodeData.id.y})";
                     _spawnedNodes.Add(nodeObj);
                 }
             }
@@ -199,10 +219,13 @@ namespace Infrastructure.Managers.LevelManager
                 var rotation = Quaternion.LookRotation(direction);
 
                 var poolKey = GetEdgePoolKey(edgeData.type);
-                var edgeObj = _poolManager.Spawn(poolKey, _gridParent, centerPos, rotation);
+                var edgeObj = _poolManager.Spawn(poolKey, _edgesParent, centerPos, rotation);
                 
                 if (edgeObj != null)
                 {
+                    // Name the edge based on its type and connection IDs
+                    edgeObj.name = $"{edgeData.type}Edge_({edgeData.fromId.x},{edgeData.fromId.y})_to_({edgeData.toId.x},{edgeData.toId.y})";
+                    
                     // Scale edge to match distance
                     var distance = Vector3.Distance(fromPos, toPos);
                     edgeObj.transform.localScale = new Vector3(_gridConfig.edgeWidth, _gridConfig.edgeWidth, distance);
@@ -257,6 +280,9 @@ namespace Infrastructure.Managers.LevelManager
                 }
             }
             _spawnedEdges.Clear();
+            
+            // Don't destroy parent objects, just keep them for reuse
+            // They will be reused in the next level generation
         }
 
         private string GetNodePoolKey(NodeType nodeType)
@@ -301,6 +327,16 @@ namespace Infrastructure.Managers.LevelManager
             _currentLevel = -1;
             ClearGrid();
             _currentLevelGraph = null;
+            
+            // Reset all grid references
+            if (_gridParent != null)
+            {
+                UnityEngine.Object.Destroy(_gridParent.gameObject);
+                _gridParent = null;
+                _nodesParent = null;
+                _edgesParent = null;
+            }
+            
             Debug.Log("Level progress reset");
         }
 
