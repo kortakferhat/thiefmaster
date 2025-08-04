@@ -15,6 +15,7 @@ namespace Infrastructure.Managers.LevelManager
         private int _currentLevel = -1;
         private GraphScriptableObject _currentLevelGraph;
         private GridConfig _gridConfig;
+        private Transform _gridRoot; // Root object for rotation
         private Transform _gridParent;
         private Transform _nodesParent;
         private Transform _edgesParent;
@@ -111,11 +112,27 @@ namespace Infrastructure.Managers.LevelManager
         private void InitializeGridSystem()
         {
             _poolManager ??= ServiceLocator.Get<IPoolManager>();
+            
+            // Create root object for rotation
+            if (_gridRoot == null)
+            {
+                var rootObject = new GameObject("GridRoot");
+                _gridRoot = rootObject.transform;
+                
+                // Find or create Level object and make GridRoot its child
+                GameObject levelObject = GameObject.Find("Level");
+                if (levelObject == null)
+                {
+                    levelObject = new GameObject("Level");
+                }
+                _gridRoot.SetParent(levelObject.transform);
+            }
                 
             if (_gridParent == null)
             {
                 var gridObject = new GameObject("LevelGrid");
                 _gridParent = gridObject.transform;
+                _gridParent.SetParent(_gridRoot); // Make LevelGrid child of root
             }
             
             // Always ensure we have nodes and edges parent objects
@@ -141,21 +158,58 @@ namespace Infrastructure.Managers.LevelManager
 
             var graph = _currentLevelGraph.CreateGraph();
             
+            // Calculate bounding box center as pivot point for node positioning
+            Vector3 pivotPoint = CalculateBoundingBoxCenter();
+            
+            // LevelGrid stays at (0,0,0) - no offset needed
+            _gridParent.localPosition = Vector3.zero;
+            
             // Generate nodes
             GenerateNodes(graph);
             
             // Generate edges
             GenerateEdges(graph);
             
-            // Apply rotation to the grid parent object
+            // Apply rotation to the root object
             ApplyGridRotation();
             
-            var gridCenter = GetGridCenter();
             Debug.Log($"Grid generated with {_spawnedNodes.Count} nodes and {_spawnedEdges.Count} edges");
+            Debug.Log($"Pivot Point: {pivotPoint}");
             Debug.Log($"Level Rotation: {_gridConfig.levelRotation} ({(float)_gridConfig.levelRotation}°)");
-            Debug.Log($"Grid Center: ({gridCenter.x}, {gridCenter.y}) - Grid is centered around origin");
-            Debug.Log($"Grid Parent Rotation: {_gridParent.rotation.eulerAngles}");
-            Debug.Log($"Hierarchy: {_gridParent.name} -> Nodes: {_nodesParent.name} ({_nodesParent.childCount} children), Edges: {_edgesParent.name} ({_edgesParent.childCount} children)");
+            Debug.Log($"Grid Root Position: {_gridRoot.position}, Rotation: {_gridRoot.rotation.eulerAngles}");
+            Debug.Log($"Grid Parent Local Position: {_gridParent.localPosition}");
+        }
+
+        private Vector3 CalculateBoundingBoxCenter()
+        {
+            var nodes = _currentLevelGraph.graphData.nodes;
+            
+            if (nodes.Count == 0)
+                return Vector3.zero;
+            
+            // Find bounding box
+            int minX = nodes[0].id.x, maxX = nodes[0].id.x;
+            int minY = nodes[0].id.y, maxY = nodes[0].id.y;
+            
+            foreach (var node in nodes)
+            {
+                if (node.id.x < minX) minX = node.id.x;
+                if (node.id.x > maxX) maxX = node.id.x;
+                if (node.id.y < minY) minY = node.id.y;
+                if (node.id.y > maxY) maxY = node.id.y;
+            }
+            
+            // Calculate center in grid coordinates
+            Vector2Int gridCenter = new Vector2Int((minX + maxX) / 2, (minY + maxY) / 2);
+            
+            // Convert to world position
+            Vector3 worldCenter = new Vector3(
+                gridCenter.x * _gridConfig.gridSpacing,
+                _gridConfig.nodeYPosition,
+                -gridCenter.y * _gridConfig.gridSpacing
+            );
+            
+            return worldCenter;
         }
 
         private void GenerateNodes(Graph graph)
@@ -199,51 +253,33 @@ namespace Infrastructure.Managers.LevelManager
 
         private Vector3 GetNodeWorldPosition(Vector2Int nodeId)
         {
-            // Calculate grid center offset to keep grid centered
-            Vector2Int gridCenter = GetGridCenter();
+            // Calculate position relative to grid center (pivot point)
+            Vector3 pivotPoint = CalculateBoundingBoxCenter();
             
-            // Base position relative to grid center (no rotation applied here)
-            Vector3 basePosition = new Vector3(
-                (nodeId.x - gridCenter.x) * _gridConfig.gridSpacing,
+            // Node position relative to pivot point
+            Vector3 position = new Vector3(
+                nodeId.x * _gridConfig.gridSpacing,
                 _gridConfig.nodeYPosition,
-                -(nodeId.y - gridCenter.y) * _gridConfig.gridSpacing
-            );
+                -nodeId.y * _gridConfig.gridSpacing
+            ) - pivotPoint; // Subtract pivot to center the grid
             
-            // Grid rotation will be applied to the parent object instead
-            return basePosition;
-        }
-
-        private Vector2Int GetGridCenter()
-        {
-            var nodes = _currentLevelGraph.graphData.nodes;
-            
-            int minX = nodes[0].id.x, maxX = nodes[0].id.x;
-            int minY = nodes[0].id.y, maxY = nodes[0].id.y;
-            
-            foreach (var node in nodes)
-            {
-                if (node.id.x < minX) minX = node.id.x;
-                if (node.id.x > maxX) maxX = node.id.x;
-                if (node.id.y < minY) minY = node.id.y;
-                if (node.id.y > maxY) maxY = node.id.y;
-            }
-            
-            return new Vector2Int((minX + maxX) / 2, (minY + maxY) / 2);
+            return position;
         }
 
         private void ApplyGridRotation()
         {
-            // Apply rotation to the grid parent object
+            // Apply rotation to the root object
             float rotationAngle = (float)_gridConfig.levelRotation;
-            _gridParent.rotation = Quaternion.Euler(0, rotationAngle, 0);
+            _gridRoot.rotation = Quaternion.Euler(0, rotationAngle, 0);
             
-            Debug.Log($"Applied rotation {rotationAngle}° to grid parent");
+            Debug.Log($"Applied rotation {rotationAngle}° to grid root");
         }
 
         private void ClearGrid()
         {
-            // Reset grid parent rotation before clearing
-            _gridParent.rotation = Quaternion.identity;
+            // Reset root rotation and grid parent position before clearing
+            _gridRoot.rotation = Quaternion.identity;
+            _gridParent.localPosition = Vector3.zero;
             
             // Despawn all nodes - we don't track their types, so try all possible node types
             foreach (var node in _spawnedNodes)
@@ -320,9 +356,8 @@ namespace Infrastructure.Managers.LevelManager
                 _gridConfig.levelRotation = rotation;
                 Debug.Log($"Level rotation changed to: {rotation} ({(float)rotation}°)");
                 
-                // If we have a current level, regenerate it with new rotation
-                Debug.Log("Regenerating current level with new rotation...");
-                LoadLevel(_currentLevelGraph);
+                // Simply apply the new rotation to the grid root
+                ApplyGridRotation();
             }
         }
 
@@ -338,14 +373,13 @@ namespace Infrastructure.Managers.LevelManager
             _currentLevelGraph = null;
             
             // Reset all grid references
-            UnityEngine.Object.Destroy(_gridParent.gameObject);
+            UnityEngine.Object.Destroy(_gridRoot.gameObject);
+            _gridRoot = null;
             _gridParent = null;
             _nodesParent = null;
             _edgesParent = null;
             
             Debug.Log("Level progress reset");
         }
-
-
     }
 } 

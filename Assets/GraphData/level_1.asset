@@ -46,6 +46,15 @@ MonoBehaviour:
     - id: {x: 3, y: -3}
       type: 6
       isDestroyed: 0
+    - id: {x: 5, y: -1}
+      type: 0
+      isDestroyed: 0
+    - id: {x: 5, y: -2}
+      type: 0
+      isDestroyed: 0
+    - id: {x: 5, y: -3}
+      type: 0
+      isDestroyed: 0
     edges:
     - fromId: {x: 1, y: -2}
       toId: {x: 2, y: -2}
@@ -99,13 +108,26 @@ MonoBehaviour:
       toId: {x: 2, y: -3}
       type: 0
       isUsed: 0
-    graphName: Graph1
+    - fromId: {x: 4, y: -1}
+      toId: {x: 5, y: -1}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 4, y: -3}
+      toId: {x: 5, y: -3}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 5, y: -3}
+      toId: {x: 5, y: -2}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 4, y: -2}
+      toId: {x: 5, y: -2}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 5, y: -1}
+      toId: {x: 5, y: -2}
+      type: 0
+      isUsed: 0
+    graphName: Level1
   nodeSize: 1
   edgeWidth: 0.1
-  startNodeColor: {r: 0, g: 1, b: 0, a: 1}
-  goalNodeColor: {r: 1, g: 0, b: 0, a: 1}
-  normalNodeColor: {r: 1, g: 1, b: 1, a: 1}
-  breakableNodeColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
-  redirectorNodeColor: {r: 0, g: 0, b: 1, a: 1}
-  trapNodeColor: {r: 0, g: 0, b: 0, a: 1}
-  enemyNodeColor: {r: 1, g: 0, b: 1, a: 1}
