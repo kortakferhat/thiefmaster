@@ -39,6 +39,9 @@ namespace Infrastructure.Managers.LevelManager
             {
                 // Load GridConfig from Addressables
                 _gridConfig = await Addressables.LoadAssetAsync<GridConfig>("GridConfig").ToUniTask();
+                
+                // Load default level
+                LoadLevel(1);
             }
             catch (Exception ex)
             {

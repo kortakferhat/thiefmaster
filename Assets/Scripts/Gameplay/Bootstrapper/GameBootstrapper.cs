@@ -1,14 +1,10 @@
 using Gameplay.Graph;
-using Gameplay.Items;
 using Infrastructure.Components;
 using Infrastructure.Managers;
 using Infrastructure.Managers.EconomyManager;
-
 using Infrastructure.Managers.LevelManager;
-using Infrastructure.Managers.PoolManager;
 using Infrastructure.Managers.TooltipManager;
 using TowerClicker.Infrastructure;
-using TowerClicker.Infrastructure.Managers;
 using TowerClicker.Infrastructure.Managers.CameraManager;
 using UnityEngine;
 
@@ -75,15 +71,12 @@ namespace Gameplay.Bootstrapper
             cameraFollow.Initialize();
             
             //
-            var testBox = poolManager.Spawn(PoolKeys.TestBox, viewRoot).GetComponent<TestBox>();
-            testBox.transform.localPosition = new Vector3(5.45f, 1.5f, 8.33f);
-            testBox.Initialize();
             
             gameManager.StartGame();
             
             mainMenuBootstrapper.Initialize();
             
-            // TODO: REMOVE TEST CHANGES
+            // Initialize level manager tester for debugging
             levelManagerTester.Initialize();
         }
     }

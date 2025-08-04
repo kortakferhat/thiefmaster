@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c1ff8061caace474e9b064895cc3c630, type: 3}
   m_Name: GridConfig
   m_EditorClassIdentifier: 
-  gridSpacing: 2
+  gridSpacing: 5
   nodeYPosition: 1
   verticalOffsetPercentage: 1
   additionalVerticalOffset: 0
