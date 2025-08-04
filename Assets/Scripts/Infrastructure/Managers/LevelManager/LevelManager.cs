@@ -122,6 +122,7 @@ namespace Infrastructure.Managers.LevelManager
             _poolManager = ServiceLocator.Get<IPoolManager>();
             
             // Create root object for rotation
+            Debug.LogError("LOADGRIDDD !!");
             var rootObject = new GameObject("GridRoot");
             _gridRoot = rootObject.transform;
             
@@ -173,6 +174,7 @@ namespace Infrastructure.Managers.LevelManager
             ApplyVerticalOffsetToLevel(_levelObject);
             
             // Notify that grid is fully generated
+            Debug.Log($"[LevelManager] Invoking OnGridGenerated event");
             OnGridGenerated?.Invoke(_currentGraph);
         }
 

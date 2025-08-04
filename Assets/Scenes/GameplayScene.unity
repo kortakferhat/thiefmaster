@@ -128,7 +128,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 109024624}
-  - component: {fileID: 109024625}
   m_Layer: 0
   m_Name: Level1
   m_TagString: Untagged
@@ -151,22 +150,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &109024625
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 109024623}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2be9b176070484bf7b978cb977a2bfa7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  testLevel1: {fileID: 11400000, guid: 7a69fc7b55e1240b4a6fddc6983ba295, type: 2}
-  testLevel2: {fileID: 11400000, guid: 7a69fc7b55e1240b4a6fddc6983ba295, type: 2}
-  currentLevelIndex: 0
-  currentLevelName: Test
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -952,7 +935,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 477e197e7b764c0687ffde98a4037051, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  levelManagerTester: {fileID: 109024625}
   topCamera: {fileID: 1782202878}
   characterController: {fileID: 751199646}
   cameraFollow: {fileID: 330585548}

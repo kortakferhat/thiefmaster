@@ -3,19 +3,24 @@ using UnityEngine.InputSystem;
 using Gameplay.Graph;
 using Infrastructure.Managers.LevelManager;
 using TowerClicker.Infrastructure;
+using DG.Tweening;
 
 namespace Gameplay.Character
 {
     public class CharacterController : BaseEntity
     {
-        private const string LOG_TAG = "[CharacterController]";
-        
         [Header("Components")]
         [SerializeField] private Transform characterTransform;
+        
+        [Header("Movement Settings")]
+        [SerializeField] private float moveDuration = 0.3f;
+        [SerializeField] private Ease moveEase = Ease.OutQuad;
         
         private InputSystem_Actions _playerInputActions;
         private Vector2Int _currentNodeId;
         private ILevelManager _levelManager;
+        private bool _isMoving = false;
+        private Tween _currentMoveTween;
         
         public override void Initialize()
         {
@@ -49,19 +54,27 @@ namespace Gameplay.Character
         {
             _currentNodeId = startNode.Id;
             UpdateCharacterPosition();
-            Debug.Log($"{LOG_TAG} Started at node: {_currentNodeId}");
         }
         
         private void OnMovementPerformed(InputAction.CallbackContext context)
         {
-            Vector2 input = context.ReadValue<Vector2>();
-            Vector2Int direction = GetDirectionFromInput(input);
+            if (_isMoving) return;
             
-            Debug.Log($"{LOG_TAG} Input received: {input} -> Direction: {direction}");
+            var input = context.ReadValue<Vector2>();
+            var direction = GetDirectionFromInput(input);
             
             if (direction != Vector2Int.zero)
             {
                 TryMoveToNode(direction);
+            }
+        }
+        
+        private void TryMoveToNode(Vector2Int direction)
+        {
+            if (_levelManager.TryMoveToNode(_currentNodeId, direction, out Vector2Int targetNodeId))
+            {
+                _currentNodeId = targetNodeId;
+                AnimateToPosition();
             }
         }
         
@@ -77,30 +90,43 @@ namespace Gameplay.Character
             }
         }
         
-        private void TryMoveToNode(Vector2Int direction)
+        private void AnimateToPosition()
         {
-            if (_levelManager.TryMoveToNode(_currentNodeId, direction, out Vector2Int targetNodeId))
+            // Kill previous tween if it exists
+            if (_currentMoveTween != null && _currentMoveTween.IsActive())
             {
-                var oldNodeId = _currentNodeId;
-                _currentNodeId = targetNodeId;
-                UpdateCharacterPosition();
-                Debug.Log($"{LOG_TAG} Moved from {oldNodeId} to {_currentNodeId} via direction {direction}");
+                _currentMoveTween.Kill();
             }
-            else
-            {
-                Debug.Log($"{LOG_TAG} Cannot move from {_currentNodeId} in direction {direction} - invalid move");
-            }
+            
+            _isMoving = true;
+            var targetPos = _levelManager.GetNodeActualWorldPosition(_currentNodeId);
+            
+            _currentMoveTween = characterTransform.DOMove(targetPos, moveDuration)
+                .SetEase(moveEase)
+                .OnComplete(OnMoveComplete)
+                .SetAutoKill(true);
+        }
+        
+        private void OnMoveComplete()
+        {
+            _isMoving = false;
+            _currentMoveTween = null;
         }
         
         private void UpdateCharacterPosition()
         {
             var worldPos = _levelManager.GetNodeActualWorldPosition(_currentNodeId);
-            transform.position = worldPos;
-            Debug.Log($"{LOG_TAG} Position updated to: {worldPos} (Node: {_currentNodeId})");
+            characterTransform.position = worldPos;
         }
         
         private void OnDestroy()
         {
+            // Kill any active tween
+            if (_currentMoveTween != null && _currentMoveTween.IsActive())
+            {
+                _currentMoveTween.Kill();
+            }
+            
             _playerInputActions.Player.Move.performed -= OnMovementPerformed;
             _playerInputActions.Player.Disable();
             _playerInputActions.Dispose();

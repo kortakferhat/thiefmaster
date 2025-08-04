@@ -12,9 +12,6 @@ namespace Gameplay.Bootstrapper
 {
     public class GameBootstrapper : MonoBehaviour, IBootstrapper
     {
-        [SerializeField] private LevelManagerTester levelManagerTester;
-        
-        
         private Transform managersParent;
         [SerializeField] private Camera topCamera;
         [SerializeField] private Gameplay.Character.CharacterController characterController;
@@ -66,9 +63,6 @@ namespace Gameplay.Bootstrapper
             var tooltipManager = Instantiate(new GameObject("TooltipManager"), managersParent).AddComponent<TooltipManager>();
             tooltipManager.Initialize(poolManager, tooltipsRoot);
             ServiceLocator.Register<ITooltipManager>(tooltipManager);
-            
-            // Initialize level manager tester for debugging
-            levelManagerTester.Initialize();
             
             // Load initial level before initializing character
             levelManager.LoadLevel(1);
