@@ -16,7 +16,6 @@ MonoBehaviour:
   nodeYPosition: 1
   verticalOffsetPercentage: 1
   additionalVerticalOffset: 0
-  levelRotation: 270
   edgeLength: 2
   edgeWidth: 0.1
   edgeYOffset: 0.1

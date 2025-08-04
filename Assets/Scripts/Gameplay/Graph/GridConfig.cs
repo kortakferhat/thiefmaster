@@ -2,14 +2,6 @@ using UnityEngine;
 
 namespace Gameplay.Graph
 {
-    public enum LevelRotation
-    {
-        Right = 0,  
-        Down = 90,  
-        Left = 180, 
-        Up = 270    
-    }
-
     [CreateAssetMenu(fileName = "GridConfig", menuName = "ThiefMaster/Grid Config")]
     public class GridConfig : ScriptableObject
     {
@@ -24,9 +16,6 @@ namespace Gameplay.Graph
         
         [Tooltip("Additional vertical offset in world units")]
         public float additionalVerticalOffset = 0f;
-        
-        [Header("Level Rotation")]
-        public LevelRotation levelRotation = LevelRotation.Right;
         
         [Header("Edge Settings")]
         public float edgeLength = 2f;

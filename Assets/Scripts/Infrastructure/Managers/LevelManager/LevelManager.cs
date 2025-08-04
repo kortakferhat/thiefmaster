@@ -24,6 +24,7 @@ namespace Infrastructure.Managers.LevelManager
         
         private readonly List<GameObject> _spawnedNodes = new();
         private readonly List<GameObject> _spawnedEdges = new();
+        private readonly Dictionary<Vector2Int, GameObject> _nodeObjects = new();
         
         public int CurrentLevel => _currentLevel;
         public GraphScriptableObject CurrentLevelGraph => _currentLevelGraph;
@@ -32,6 +33,9 @@ namespace Infrastructure.Managers.LevelManager
         public event Action<GraphScriptableObject> OnLevelLoaded;
         public event Action OnLevelCompleted;
         public event Action OnLevelFailed;
+        public event Action<Graph> OnGridGenerated;
+
+        private Vector3 _pivotPoint;
 
         public async Task Initialize()
         {
@@ -109,22 +113,7 @@ namespace Infrastructure.Managers.LevelManager
             float screenHeight = Camera.main.orthographicSize * 2f;
             float offset = (screenHeight * _gridConfig.verticalOffsetPercentage) + _gridConfig.additionalVerticalOffset;
             
-            // Apply offset based on rotation for 3D perspective camera
-            switch (_gridConfig.levelRotation)
-            {
-                case LevelRotation.Right: // 0°
-                    levelObject.transform.localPosition = new Vector3(0, 0, -offset);
-                    break;
-                case LevelRotation.Down: // 90°
-                    levelObject.transform.localPosition = new Vector3(-offset, 0, 0);
-                    break;
-                case LevelRotation.Left: // 180°
-                    levelObject.transform.localPosition = new Vector3(0, 0, offset);
-                    break;
-                case LevelRotation.Up: // 270°
-                    levelObject.transform.localPosition = new Vector3(offset, 0, 0);
-                    break;
-            }
+            levelObject.transform.localPosition = new Vector3(0, 0, offset);
         }
 
         private void InitializeGridSystem()
@@ -157,13 +146,16 @@ namespace Infrastructure.Managers.LevelManager
 
         private void GenerateGrid()
         {
+            // Initialize grid system first
             InitializeGridSystem();
+            
+            // Clear existing grid
             ClearGrid();
 
             var graph = _currentLevelGraph.CreateGraph();
             
             // Calculate bounding box center as pivot point for node positioning
-            Vector3 pivotPoint = CalculateBoundingBoxCenter();
+            _pivotPoint = CalculateBoundingBoxCenter();
             
             // LevelGrid stays at (0,0,0) - no offset needed
             _gridParent.localPosition = Vector3.zero;
@@ -174,11 +166,13 @@ namespace Infrastructure.Managers.LevelManager
             // Generate edges
             GenerateEdges(graph);
             
-            // Apply rotation to the root object
-            ApplyGridRotation();
+            // Grid rotation removed - no rotation applied
             
             // Apply vertical offset to Level object after all content is generated
             ApplyVerticalOffsetToLevel(_levelObject);
+            
+            // Notify that grid is fully generated
+            OnGridGenerated?.Invoke(graph);
         }
 
         private Vector3 CalculateBoundingBoxCenter()
@@ -207,7 +201,7 @@ namespace Infrastructure.Managers.LevelManager
             Vector3 worldCenter = new Vector3(
                 gridCenter.x * _gridConfig.gridSpacing,
                 _gridConfig.nodeYPosition,
-                -gridCenter.y * _gridConfig.gridSpacing
+                gridCenter.y * _gridConfig.gridSpacing
             );
             
             return worldCenter;
@@ -223,7 +217,13 @@ namespace Infrastructure.Managers.LevelManager
                 
                 // Name the node based on its type and ID
                 nodeObj.name = $"{nodeData.type}Node_({nodeData.id.x},{nodeData.id.y})";
+                
+                // Add NodeGizmo component to display node ID
+                var nodeGizmo = nodeObj.AddComponent<Gameplay.Graph.NodeGizmo>();
+                nodeGizmo.Initialize(nodeData.id, nodeData.type);
+                
                 _spawnedNodes.Add(nodeObj);
+                _nodeObjects[nodeData.id] = nodeObj;
             }
         }
 
@@ -252,26 +252,29 @@ namespace Infrastructure.Managers.LevelManager
             }
         }
 
-        private Vector3 GetNodeWorldPosition(Vector2Int nodeId)
+        public Vector3 GetNodeWorldPosition(Vector2Int nodeId)
         {
-            // Calculate position relative to grid center (pivot point)
-            Vector3 pivotPoint = CalculateBoundingBoxCenter();
-            
             // Node position relative to pivot point
-            Vector3 position = new Vector3(
+            var position = new Vector3(
                 nodeId.x * _gridConfig.gridSpacing,
                 _gridConfig.nodeYPosition,
-                -nodeId.y * _gridConfig.gridSpacing
-            ) - pivotPoint; // Subtract pivot to center the grid
+                nodeId.y * _gridConfig.gridSpacing
+            ) - _pivotPoint; // Subtract pivot to center the grid
             
             return position;
         }
 
-        private void ApplyGridRotation()
+        public Vector3 GetNodeActualWorldPosition(Vector2Int nodeId)
         {
-            _gridRoot.rotation = Quaternion.Euler(0, (float)_gridConfig.levelRotation, 0);
+            if (_nodeObjects.TryGetValue(nodeId, out var nodeObj))
+            {
+                return nodeObj.transform.position;
+            }
+            
+            // Fallback to calculated position
+            return GetNodeWorldPosition(nodeId);
         }
-
+        
         private void ClearGrid()
         {
             // Reset root rotation and grid parent position before clearing
@@ -294,6 +297,7 @@ namespace Infrastructure.Managers.LevelManager
                     UnityEngine.Object.Destroy(node);
             }
             _spawnedNodes.Clear();
+            _nodeObjects.Clear();
 
             // Despawn all edges
             foreach (var edge in _spawnedEdges)
@@ -307,9 +311,6 @@ namespace Infrastructure.Managers.LevelManager
                     UnityEngine.Object.Destroy(edge);
             }
             _spawnedEdges.Clear();
-            
-            // Don't destroy parent objects, just keep them for reuse
-            // They will be reused in the next level generation
         }
 
         private string GetNodePoolKey(NodeType nodeType)
@@ -344,18 +345,11 @@ namespace Infrastructure.Managers.LevelManager
             _gridConfig = config;
         }
 
-        public void SetLevelRotation(LevelRotation rotation)
-        {
-            if (_gridConfig.levelRotation != rotation)
-            {
-                _gridConfig.levelRotation = rotation;
-                ApplyGridRotation();
-            }
-        }
 
-        public LevelRotation GetCurrentRotation()
+
+        public GridConfig GetGridConfig()
         {
-            return _gridConfig.levelRotation;
+            return _gridConfig;
         }
 
         public void ResetLevelProgress()

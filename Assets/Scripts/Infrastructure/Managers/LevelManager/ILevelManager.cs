@@ -1,6 +1,7 @@
 using System;
 using Gameplay.Graph;
 using TowerClicker.Infrastructure;
+using UnityEngine;
 
 namespace Infrastructure.Managers.LevelManager
 {
@@ -13,6 +14,7 @@ namespace Infrastructure.Managers.LevelManager
         event Action<GraphScriptableObject> OnLevelLoaded;
         event Action OnLevelCompleted;
         event Action OnLevelFailed;
+        event Action<Graph> OnGridGenerated;
         
         System.Threading.Tasks.Task Initialize();
         void LoadLevel(int levelIndex);
@@ -24,8 +26,11 @@ namespace Infrastructure.Managers.LevelManager
         void SetGridConfig(GridConfig config);
         void ResetLevelProgress();
         
-        // Level Rotation Methods
-        void SetLevelRotation(LevelRotation rotation);
-        LevelRotation GetCurrentRotation();
+        // Grid Position Methods
+        Vector3 GetNodeWorldPosition(Vector2Int nodeId);
+        Vector3 GetNodeActualWorldPosition(Vector2Int nodeId);
+        
+        // Grid Configuration Methods
+        GridConfig GetGridConfig();
     }
 } 

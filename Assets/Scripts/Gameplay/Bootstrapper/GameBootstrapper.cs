@@ -67,6 +67,13 @@ namespace Gameplay.Bootstrapper
             tooltipManager.Initialize(poolManager, tooltipsRoot);
             ServiceLocator.Register<ITooltipManager>(tooltipManager);
             
+            // Initialize level manager tester for debugging
+            levelManagerTester.Initialize();
+            
+            // Load initial level before initializing character
+            levelManager.LoadLevel(1);
+            
+            // Initialize character after level is loaded
             characterController.Initialize();
             cameraFollow.Initialize();
             
@@ -75,9 +82,6 @@ namespace Gameplay.Bootstrapper
             gameManager.StartGame();
             
             mainMenuBootstrapper.Initialize();
-            
-            // Initialize level manager tester for debugging
-            levelManagerTester.Initialize();
         }
     }
 }

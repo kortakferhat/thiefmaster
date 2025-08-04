@@ -16,116 +16,98 @@ MonoBehaviour:
   description: 
   graphData:
     nodes:
-    - id: {x: 1, y: -2}
-      type: 1
-      isDestroyed: 0
-    - id: {x: 4, y: -2}
+    - id: {x: 3, y: -1}
       type: 2
       isDestroyed: 0
-    - id: {x: 2, y: -2}
+    - id: {x: 3, y: -5}
+      type: 1
+      isDestroyed: 0
+    - id: {x: 3, y: -4}
       type: 0
       isDestroyed: 0
-    - id: {x: 2, y: -1}
+    - id: {x: 2, y: -4}
       type: 0
       isDestroyed: 0
-    - id: {x: 2, y: -3}
+    - id: {x: 4, y: -4}
       type: 0
-      isDestroyed: 0
-    - id: {x: 3, y: -2}
-      type: 6
-      isDestroyed: 0
-    - id: {x: 4, y: -1}
-      type: 0
-      isDestroyed: 0
-    - id: {x: 4, y: -3}
-      type: 0
-      isDestroyed: 0
-    - id: {x: 3, y: -1}
-      type: 6
       isDestroyed: 0
     - id: {x: 3, y: -3}
       type: 6
       isDestroyed: 0
-    - id: {x: 5, y: -1}
+    - id: {x: 4, y: -3}
       type: 0
       isDestroyed: 0
-    - id: {x: 5, y: -2}
+    - id: {x: 2, y: -3}
+      type: 6
+      isDestroyed: 0
+    - id: {x: 2, y: -2}
       type: 0
       isDestroyed: 0
-    - id: {x: 5, y: -3}
+    - id: {x: 3, y: -2}
+      type: 0
+      isDestroyed: 0
+    - id: {x: 4, y: -2}
       type: 0
       isDestroyed: 0
     edges:
-    - fromId: {x: 1, y: -2}
+    - fromId: {x: 3, y: -4}
+      toId: {x: 2, y: -4}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 3, y: -4}
+      toId: {x: 4, y: -4}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 2, y: -4}
+      toId: {x: 2, y: -3}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 3, y: -1}
+      toId: {x: 3, y: -1}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 3, y: -5}
+      toId: {x: 3, y: -4}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 2, y: -3}
+      toId: {x: 3, y: -3}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 3, y: -4}
+      toId: {x: 3, y: -3}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 4, y: -4}
+      toId: {x: 4, y: -3}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 3, y: -3}
+      toId: {x: 4, y: -3}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 4, y: -2}
+      toId: {x: 4, y: -3}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 4, y: -2}
+      toId: {x: 3, y: -2}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 3, y: -3}
+      toId: {x: 3, y: -2}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 2, y: -3}
       toId: {x: 2, y: -2}
       type: 0
       isUsed: 0
     - fromId: {x: 2, y: -2}
-      toId: {x: 2, y: -1}
-      type: 0
-      isUsed: 0
-    - fromId: {x: 2, y: -2}
-      toId: {x: 2, y: -3}
-      type: 0
-      isUsed: 0
-    - fromId: {x: 2, y: -2}
       toId: {x: 3, y: -2}
       type: 0
       isUsed: 0
     - fromId: {x: 3, y: -2}
-      toId: {x: 4, y: -2}
-      type: 0
-      isUsed: 0
-    - fromId: {x: 2, y: -1}
       toId: {x: 3, y: -1}
-      type: 0
-      isUsed: 0
-    - fromId: {x: 3, y: -2}
-      toId: {x: 3, y: -1}
-      type: 0
-      isUsed: 0
-    - fromId: {x: 4, y: -1}
-      toId: {x: 3, y: -1}
-      type: 0
-      isUsed: 0
-    - fromId: {x: 4, y: -1}
-      toId: {x: 4, y: -2}
-      type: 0
-      isUsed: 0
-    - fromId: {x: 4, y: -2}
-      toId: {x: 4, y: -3}
-      type: 0
-      isUsed: 0
-    - fromId: {x: 3, y: -3}
-      toId: {x: 4, y: -3}
-      type: 0
-      isUsed: 0
-    - fromId: {x: 3, y: -3}
-      toId: {x: 3, y: -2}
-      type: 0
-      isUsed: 0
-    - fromId: {x: 3, y: -3}
-      toId: {x: 2, y: -3}
-      type: 0
-      isUsed: 0
-    - fromId: {x: 4, y: -1}
-      toId: {x: 5, y: -1}
-      type: 0
-      isUsed: 0
-    - fromId: {x: 4, y: -3}
-      toId: {x: 5, y: -3}
-      type: 0
-      isUsed: 0
-    - fromId: {x: 5, y: -3}
-      toId: {x: 5, y: -2}
-      type: 0
-      isUsed: 0
-    - fromId: {x: 4, y: -2}
-      toId: {x: 5, y: -2}
-      type: 0
-      isUsed: 0
-    - fromId: {x: 5, y: -1}
-      toId: {x: 5, y: -2}
       type: 0
       isUsed: 0
     graphName: Level1

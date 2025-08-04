@@ -14,12 +14,25 @@ namespace Gameplay.Graph
 
         public Node GetNode(Vector2Int id) => nodes.GetValueOrDefault(id);
 
+        public Node GetStartNode()
+        {
+            return nodes.Values.FirstOrDefault(node => node.Type == NodeType.Start);
+        }
+
         public Edge GetEdge(Node from, Vector2Int direction)
         {
             var targetId = from.Id + direction;
-            return edges.FirstOrDefault(e =>
-                e.From == from && e.To.Id == targetId && !e.IsUsed &&
-                !e.To.IsDestroyed);
+            
+            foreach (var edge in edges)
+            {
+                if ((edge.From == from && edge.To.Id == targetId && !edge.To.IsDestroyed) ||
+                    (edge.To == from && edge.From.Id == targetId && !edge.From.IsDestroyed))
+                {
+                    return edge;
+                }
+            }
+            
+            return null;
         }
     }
 
