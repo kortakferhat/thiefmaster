@@ -10,9 +10,11 @@ namespace Gameplay.Character
     {
         private const string LOG_TAG = "[CharacterController]";
         
+        [Header("Components")]
+        [SerializeField] private Transform characterTransform;
+        
         private InputSystem_Actions _playerInputActions;
         private Vector2Int _currentNodeId;
-        private Graph.Graph _currentGraph;
         private ILevelManager _levelManager;
         
         public override void Initialize()
@@ -35,7 +37,7 @@ namespace Gameplay.Character
         
         private void OnLevelLoaded(GraphScriptableObject levelGraph)
         {
-            _currentGraph = levelGraph.CreateGraph();
+            // Graph is now handled by LevelManager
         }
         
         private void OnGridGenerated(Graph.Graph graph)
@@ -71,41 +73,22 @@ namespace Gameplay.Character
             }
             else
             {
-                // Map Unity input to graph coordinates
-                // Unity: up = (0,1), down = (0,-1)
-                // Graph: up = (0,1), down = (0,-1) - now correct
                 return input.y > 0 ? Vector2Int.up : Vector2Int.down;
             }
         }
         
         private void TryMoveToNode(Vector2Int direction)
         {
-            var targetNodeId = _currentNodeId + direction;
-            var targetNode = _currentGraph.GetNode(targetNodeId);
-            
-            Debug.Log($"{LOG_TAG} Current node: {_currentNodeId}, Direction: {direction}, Target node: {targetNodeId}, Found: {targetNode != null}");
-            
-            if (targetNode != null)
+            if (_levelManager.TryMoveToNode(_currentNodeId, direction, out Vector2Int targetNodeId))
             {
-                // Check if there's a valid edge between current and target node
-                var currentNode = _currentGraph.GetNode(_currentNodeId);
-                var edge = _currentGraph.GetEdge(currentNode, direction);
-                
-                if (edge != null)
-                {
-                    var oldNodeId = _currentNodeId;
-                    _currentNodeId = targetNodeId;
-                    UpdateCharacterPosition();
-                    Debug.Log($"{LOG_TAG} Moved from {oldNodeId} to {_currentNodeId} via direction {direction}");
-                }
-                else
-                {
-                    Debug.Log($"{LOG_TAG} Cannot move from {_currentNodeId} to {targetNodeId} - no valid edge");
-                }
+                var oldNodeId = _currentNodeId;
+                _currentNodeId = targetNodeId;
+                UpdateCharacterPosition();
+                Debug.Log($"{LOG_TAG} Moved from {oldNodeId} to {_currentNodeId} via direction {direction}");
             }
             else
             {
-                Debug.Log($"{LOG_TAG} Cannot move from {_currentNodeId} in direction {direction} - target node does not exist");
+                Debug.Log($"{LOG_TAG} Cannot move from {_currentNodeId} in direction {direction} - invalid move");
             }
         }
         

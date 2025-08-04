@@ -29,6 +29,7 @@ namespace Infrastructure.Managers.LevelManager
         // Grid Position Methods
         Vector3 GetNodeWorldPosition(Vector2Int nodeId);
         Vector3 GetNodeActualWorldPosition(Vector2Int nodeId);
+        bool TryMoveToNode(Vector2Int currentNodeId, Vector2Int direction, out Vector2Int targetNodeId);
         
         // Grid Configuration Methods
         GridConfig GetGridConfig();

@@ -36,6 +36,7 @@ namespace Infrastructure.Managers.LevelManager
         public event Action<Graph> OnGridGenerated;
 
         private Vector3 _pivotPoint;
+        private Graph _currentGraph;
 
         public async Task Initialize()
         {
@@ -152,7 +153,7 @@ namespace Infrastructure.Managers.LevelManager
             // Clear existing grid
             ClearGrid();
 
-            var graph = _currentLevelGraph.CreateGraph();
+            _currentGraph = _currentLevelGraph.CreateGraph();
             
             // Calculate bounding box center as pivot point for node positioning
             _pivotPoint = CalculateBoundingBoxCenter();
@@ -161,10 +162,10 @@ namespace Infrastructure.Managers.LevelManager
             _gridParent.localPosition = Vector3.zero;
             
             // Generate nodes
-            GenerateNodes(graph);
+            GenerateNodes(_currentGraph);
             
             // Generate edges
-            GenerateEdges(graph);
+            GenerateEdges(_currentGraph);
             
             // Grid rotation removed - no rotation applied
             
@@ -172,7 +173,7 @@ namespace Infrastructure.Managers.LevelManager
             ApplyVerticalOffsetToLevel(_levelObject);
             
             // Notify that grid is fully generated
-            OnGridGenerated?.Invoke(graph);
+            OnGridGenerated?.Invoke(_currentGraph);
         }
 
         private Vector3 CalculateBoundingBoxCenter()
@@ -273,6 +274,29 @@ namespace Infrastructure.Managers.LevelManager
             
             // Fallback to calculated position
             return GetNodeWorldPosition(nodeId);
+        }
+
+        public bool TryMoveToNode(Vector2Int currentNodeId, Vector2Int direction, out Vector2Int targetNodeId)
+        {
+            targetNodeId = currentNodeId + direction;
+            
+            if (_currentGraph == null)
+            {
+                return false;
+            }
+            
+            // Check if target node exists
+            var targetNode = _currentGraph.GetNode(targetNodeId);
+            if (targetNode == null)
+            {
+                return false;
+            }
+            
+            // Check if there's a valid edge between current and target node
+            var currentNode = _currentGraph.GetNode(currentNodeId);
+            var edge = _currentGraph.GetEdge(currentNode, direction);
+            
+            return edge != null;
         }
         
         private void ClearGrid()
