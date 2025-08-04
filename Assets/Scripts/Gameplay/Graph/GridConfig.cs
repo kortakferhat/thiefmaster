@@ -17,6 +17,14 @@ namespace Gameplay.Graph
         public float gridSpacing = 2f;
         public float nodeYPosition = 0f;
         
+        [Header("Screen Positioning")]
+        [Range(0f, 1f)]
+        [Tooltip("Vertical position as percentage of screen height (0 = bottom, 1 = top)")]
+        public float verticalOffsetPercentage = 0.5f;
+        
+        [Tooltip("Additional vertical offset in world units")]
+        public float additionalVerticalOffset = 0f;
+        
         [Header("Level Rotation")]
         public LevelRotation levelRotation = LevelRotation.Right;
         

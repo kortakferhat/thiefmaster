@@ -19,6 +19,7 @@ namespace Infrastructure.Managers.LevelManager
         private Transform _gridParent;
         private Transform _nodesParent;
         private Transform _edgesParent;
+        private GameObject _levelObject; // Level object reference
         private IPoolManager _poolManager;
         
         private readonly List<GameObject> _spawnedNodes = new();
@@ -38,12 +39,10 @@ namespace Infrastructure.Managers.LevelManager
             {
                 // Load GridConfig from Addressables
                 _gridConfig = await Addressables.LoadAssetAsync<GridConfig>("GridConfig").ToUniTask();
-                Debug.Log("GridConfig loaded successfully from Addressables");
             }
             catch (Exception ex)
             {
                 Debug.LogError($"Error loading GridConfig from Addressables: {ex.Message}");
-                Debug.Log("Creating default GridConfig as fallback");
                 _gridConfig = ScriptableObject.CreateInstance<GridConfig>();
             }
         }
@@ -80,75 +79,77 @@ namespace Infrastructure.Managers.LevelManager
             // Trigger events
             OnLevelChanged?.Invoke(_currentLevel);
             OnLevelLoaded?.Invoke(_currentLevelGraph);
-            
-            Debug.Log($"Level {_currentLevel} ('{levelGraph.graphName}') loaded and grid generated");
         }
 
         public void CompleteLevel()
         {
             OnLevelCompleted?.Invoke();
-            Debug.Log($"Level {_currentLevel} completed!");
         }
 
         public void FailLevel()
         {
             OnLevelFailed?.Invoke();
-            Debug.Log($"Level {_currentLevel} failed!");
         }
 
         public void RestartLevel()
         {
             OnLevelLoaded?.Invoke(_currentLevelGraph);
-            Debug.Log($"Level {_currentLevel} restarted");
         }
 
         public void NextLevel()
         {
-            int nextLevelIndex = _currentLevel + 1;
-            Debug.Log($"Attempting to load next level: {nextLevelIndex}");
-            LoadLevel(nextLevelIndex);
+            LoadLevel(_currentLevel + 1);
+        }
+
+        private void ApplyVerticalOffsetToLevel(GameObject levelObject)
+        {
+            float screenHeight = Camera.main.orthographicSize * 2f;
+            float offset = (screenHeight * _gridConfig.verticalOffsetPercentage) + _gridConfig.additionalVerticalOffset;
+            
+            // Apply offset based on rotation for 3D perspective camera
+            switch (_gridConfig.levelRotation)
+            {
+                case LevelRotation.Right: // 0°
+                    levelObject.transform.localPosition = new Vector3(0, 0, -offset);
+                    break;
+                case LevelRotation.Down: // 90°
+                    levelObject.transform.localPosition = new Vector3(-offset, 0, 0);
+                    break;
+                case LevelRotation.Left: // 180°
+                    levelObject.transform.localPosition = new Vector3(0, 0, offset);
+                    break;
+                case LevelRotation.Up: // 270°
+                    levelObject.transform.localPosition = new Vector3(offset, 0, 0);
+                    break;
+            }
         }
 
         private void InitializeGridSystem()
         {
-            _poolManager ??= ServiceLocator.Get<IPoolManager>();
+            _poolManager = ServiceLocator.Get<IPoolManager>();
             
             // Create root object for rotation
-            if (_gridRoot == null)
-            {
-                var rootObject = new GameObject("GridRoot");
-                _gridRoot = rootObject.transform;
-                
-                // Find or create Level object and make GridRoot its child
-                GameObject levelObject = GameObject.Find("Level");
-                if (levelObject == null)
-                {
-                    levelObject = new GameObject("Level");
-                }
-                _gridRoot.SetParent(levelObject.transform);
-            }
-                
-            if (_gridParent == null)
-            {
-                var gridObject = new GameObject("LevelGrid");
-                _gridParent = gridObject.transform;
-                _gridParent.SetParent(_gridRoot); // Make LevelGrid child of root
-            }
+            var rootObject = new GameObject("GridRoot");
+            _gridRoot = rootObject.transform;
             
-            // Always ensure we have nodes and edges parent objects
-            if (_nodesParent == null)
-            {
-                var nodesObject = new GameObject("Nodes");
-                nodesObject.transform.SetParent(_gridParent);
-                _nodesParent = nodesObject.transform;
-            }
+            // Create Level object as child of GridRoot
+            _levelObject = new GameObject("Level");
+            _levelObject.transform.SetParent(_gridRoot);
             
-            if (_edgesParent == null)
-            {
-                var edgesObject = new GameObject("Edges");
-                edgesObject.transform.SetParent(_gridParent);
-                _edgesParent = edgesObject.transform;
-            }
+            // Create grid parent
+            var gridObject = new GameObject("LevelGrid");
+            _gridParent = gridObject.transform;
+            _gridParent.SetParent(_levelObject.transform);
+            
+            // Create nodes parent
+            var nodesObject = new GameObject("Nodes");
+            nodesObject.transform.SetParent(_gridParent);
+            _nodesParent = nodesObject.transform;
+            
+            // Create edges parent
+            var edgesObject = new GameObject("Edges");
+            edgesObject.transform.SetParent(_gridParent);
+            _edgesParent = edgesObject.transform;
         }
 
         private void GenerateGrid()
@@ -173,11 +174,8 @@ namespace Infrastructure.Managers.LevelManager
             // Apply rotation to the root object
             ApplyGridRotation();
             
-            Debug.Log($"Grid generated with {_spawnedNodes.Count} nodes and {_spawnedEdges.Count} edges");
-            Debug.Log($"Pivot Point: {pivotPoint}");
-            Debug.Log($"Level Rotation: {_gridConfig.levelRotation} ({(float)_gridConfig.levelRotation}°)");
-            Debug.Log($"Grid Root Position: {_gridRoot.position}, Rotation: {_gridRoot.rotation.eulerAngles}");
-            Debug.Log($"Grid Parent Local Position: {_gridParent.localPosition}");
+            // Apply vertical offset to Level object after all content is generated
+            ApplyVerticalOffsetToLevel(_levelObject);
         }
 
         private Vector3 CalculateBoundingBoxCenter()
@@ -268,11 +266,7 @@ namespace Infrastructure.Managers.LevelManager
 
         private void ApplyGridRotation()
         {
-            // Apply rotation to the root object
-            float rotationAngle = (float)_gridConfig.levelRotation;
-            _gridRoot.rotation = Quaternion.Euler(0, rotationAngle, 0);
-            
-            Debug.Log($"Applied rotation {rotationAngle}° to grid root");
+            _gridRoot.rotation = Quaternion.Euler(0, (float)_gridConfig.levelRotation, 0);
         }
 
         private void ClearGrid()
@@ -344,8 +338,6 @@ namespace Infrastructure.Managers.LevelManager
 
         public void SetGridConfig(GridConfig config)
         {
-            Debug.LogWarning("SetGridConfig is deprecated. GridConfig is now loaded from Addressables during Initialize().");
-            Debug.Log("Overriding GridConfig with provided config for testing purposes.");
             _gridConfig = config;
         }
 
@@ -354,9 +346,6 @@ namespace Infrastructure.Managers.LevelManager
             if (_gridConfig.levelRotation != rotation)
             {
                 _gridConfig.levelRotation = rotation;
-                Debug.Log($"Level rotation changed to: {rotation} ({(float)rotation}°)");
-                
-                // Simply apply the new rotation to the grid root
                 ApplyGridRotation();
             }
         }
@@ -378,8 +367,7 @@ namespace Infrastructure.Managers.LevelManager
             _gridParent = null;
             _nodesParent = null;
             _edgesParent = null;
-            
-            Debug.Log("Level progress reset");
+            _levelObject = null;
         }
     }
 } 
