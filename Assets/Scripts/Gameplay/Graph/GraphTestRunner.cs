@@ -91,14 +91,16 @@ namespace Gameplay.Graph
                     var fromNode = graph.GetNode(edgeData.fromId);
                     var toNode = graph.GetNode(edgeData.toId);
 
-                    if (fromNode != null && toNode != null)
+                if (fromNode != null && toNode != null)
+                {
+                    // Use new LinkedList API - O(1) performance!
+                    var direction = edgeData.toId - edgeData.fromId;
+                    var connection = fromNode.GetConnection(direction);
+                    if (connection != null && connection.CanTraverse())
                     {
-                        var edge = graph.GetEdge(fromNode, edgeData.toId - edgeData.fromId);
-                        if (edge != null)
-                        {
-                            validEdges++;
-                        }
+                        validEdges++;
                     }
+                }
                 }
 
                 if (validEdges == edgeCount)
@@ -312,10 +314,11 @@ namespace Gameplay.Graph
 
                 foreach (var direction in directions)
                 {
-                    var edge = graph.GetEdge(currentNode, direction);
-                    if (edge != null && !edge.IsUsed && !edge.To.IsDestroyed)
+                    // Use new LinkedList API - O(1) performance!
+                    var connection = currentNode.GetConnection(direction);
+                    if (connection != null && connection.CanTraverse())
                     {
-                        var nextId = edge.To.Id;
+                        var nextId = connection.TargetNodeId;
                         if (!visited.Contains(nextId))
                         {
                             visited.Add(nextId);

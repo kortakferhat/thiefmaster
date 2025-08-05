@@ -46,7 +46,7 @@ namespace Infrastructure.Managers.LevelManager
                 _gridConfig = await Addressables.LoadAssetAsync<GridConfig>("GridConfig").ToUniTask();
                 
                 // Load default level
-                LoadLevel(1);
+                LoadLevel(2);
             }
             catch (Exception ex)
             {
@@ -286,18 +286,9 @@ namespace Infrastructure.Managers.LevelManager
                 return false;
             }
             
-            // Check if target node exists
-            var targetNode = _currentGraph.GetNode(targetNodeId);
-            if (targetNode == null)
-            {
-                return false;
-            }
-            
-            // Check if there's a valid edge between current and target node
-            var currentNode = _currentGraph.GetNode(currentNodeId);
-            var edge = _currentGraph.GetEdge(currentNode, direction);
-            
-            return edge != null;
+            // O(1) operation using linked list approach!
+            // Check if we can move in the specified direction from current node
+            return _currentGraph.CanMoveFromTo(currentNodeId, targetNodeId);
         }
         
         private void ClearGrid()

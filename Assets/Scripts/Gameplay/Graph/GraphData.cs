@@ -67,25 +67,23 @@ namespace Gameplay.Graph
         {
             var graph = new Graph();
             
-            // Create nodes
-            var nodeDict = new Dictionary<Vector2Int, Node>();
+            // Create nodes first
             foreach (var nodeData in nodes)
             {
                 var node = nodeData.ToNode();
-                nodeDict[nodeData.id] = node;
                 graph.AddNode(node);
             }
 
-            // Create edges
+            // Create connections between nodes
             foreach (var edgeData in edges)
             {
-                if (nodeDict.TryGetValue(edgeData.fromId, out var fromNode) && 
-                    nodeDict.TryGetValue(edgeData.toId, out var toNode))
+                graph.AddConnection(edgeData.fromId, edgeData.toId, edgeData.type);
+                
+                // If edge was used, mark the connection as used
+                if (edgeData.isUsed)
                 {
-                    var edge = new Edge(fromNode, toNode, edgeData.type);
-                    if (edgeData.isUsed)
-                        edge.MarkAsUsed();
-                    graph.AddEdge(edge);
+                    var connection = graph.GetConnection(edgeData.fromId, edgeData.toId - edgeData.fromId);
+                    connection?.MarkAsUsed();
                 }
             }
 

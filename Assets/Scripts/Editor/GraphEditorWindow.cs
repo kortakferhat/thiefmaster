@@ -6,6 +6,15 @@ using Gameplay.Graph;
 
 namespace Editor
 {
+    /// <summary>
+    /// Graph Editor Window - Visual level editor for creating graph-based levels
+    /// 
+    /// This editor works with EdgeData for serialization, but at runtime the graph
+    /// is converted to a LinkedList/Adjacency structure for O(1) performance.
+    /// 
+    /// Editor Performance: O(n) lookup is acceptable since it's only used for level editing
+    /// Runtime Performance: O(1) lookup via NodeConnection system for gameplay
+    /// </summary>
     public class GraphEditorWindow : EditorWindow
     {
         private GraphScriptableObject currentGraph;
@@ -944,7 +953,7 @@ namespace Editor
         {
             if (currentGraph?.graphData?.edges == null) return;
 
-            // Create a dictionary for faster node lookup
+            // Create a dictionary for faster node lookup - O(1) instead of O(n) for each edge
             var nodeDict = currentGraph.graphData.nodes.ToDictionary(n => n.id);
 
             foreach (var edgeData in currentGraph.graphData.edges)
@@ -1361,13 +1370,15 @@ namespace Editor
             if (currentGraph?.graphData?.edges == null) return null;
 
             var threshold = Mathf.Max(currentGraph.edgeWidth * 2f / zoom, 8f / zoom); // Adjust threshold for zoom
+            
+            // Cache node lookup for better performance - O(1) instead of O(n) for each edge
+            var nodeDict = currentGraph.graphData.nodes.ToDictionary(n => n.id);
 
             foreach (var edge in currentGraph.graphData.edges)
             {
-                var fromNode = currentGraph.graphData.nodes.FirstOrDefault(n => n.id == edge.fromId);
-                var toNode = currentGraph.graphData.nodes.FirstOrDefault(n => n.id == edge.toId);
-                
-                if (fromNode == null || toNode == null) continue;
+                if (!nodeDict.TryGetValue(edge.fromId, out var fromNode) || 
+                    !nodeDict.TryGetValue(edge.toId, out var toNode))
+                    continue;
                 
                 var fromPos = GetNodeScreenPosition(fromNode);
                 var toPos = GetNodeScreenPosition(toNode);
@@ -1739,6 +1750,8 @@ namespace Editor
             
             CheckSelectionChange();
             Debug.Log($"Edge created from {from.id} to {to.id}");
+            
+            // Note: At runtime, EdgeData will be converted to NodeConnection for O(1) performance
         }
 
         private void DrawModeFeedback()
