@@ -122,7 +122,6 @@ namespace Infrastructure.Managers.LevelManager
             _poolManager = ServiceLocator.Get<IPoolManager>();
             
             // Create root object for rotation
-            Debug.LogError("LOADGRIDDD !!");
             var rootObject = new GameObject("GridRoot");
             _gridRoot = rootObject.transform;
             

@@ -64,10 +64,7 @@ namespace Gameplay.Bootstrapper
             tooltipManager.Initialize(poolManager, tooltipsRoot);
             ServiceLocator.Register<ITooltipManager>(tooltipManager);
             
-            // Load initial level before initializing character
-            levelManager.LoadLevel(1);
-            
-            // Initialize character after level is loaded
+            // Initialize character after level is loaded (level is already loaded in levelManager.Initialize())
             characterController.Initialize();
             cameraFollow.Initialize();
             
