@@ -28,7 +28,7 @@ namespace Gameplay.Character
             
             _levelManager = ServiceLocator.Get<ILevelManager>();
             _levelManager.OnLevelLoaded += OnLevelLoaded;
-            _levelManager.OnGridGenerated += OnGridGenerated;
+            _levelManager.OnGridInstantiated += OnGridInstantiated;
             
             InitializeInputSystem();
         }
@@ -45,7 +45,7 @@ namespace Gameplay.Character
             // Graph is now handled by LevelManager
         }
         
-        private void OnGridGenerated(Graph.Graph graph)
+        private void OnGridInstantiated(Graph.Graph graph)
         {
             SetStartPosition(graph.GetStartNode());
         }
@@ -132,7 +132,7 @@ namespace Gameplay.Character
             _playerInputActions.Dispose();
             
             _levelManager.OnLevelLoaded -= OnLevelLoaded;
-            _levelManager.OnGridGenerated -= OnGridGenerated;
+            _levelManager.OnGridInstantiated -= OnGridInstantiated;
         }
     }
 }

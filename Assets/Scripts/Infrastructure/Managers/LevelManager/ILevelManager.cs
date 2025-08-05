@@ -15,6 +15,7 @@ namespace Infrastructure.Managers.LevelManager
         event Action OnLevelCompleted;
         event Action OnLevelFailed;
         event Action<Graph> OnGridGenerated;
+        event Action<Graph> OnGridInstantiated;
         
         System.Threading.Tasks.Task Initialize();
         void LoadLevel(int levelIndex);

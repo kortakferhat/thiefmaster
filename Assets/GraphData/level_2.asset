@@ -1,0 +1,95 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3cb5178ce6c73aa4e82fb24b025b2d09, type: 3}
+  m_Name: level_2
+  m_EditorClassIdentifier: 
+  graphName: Level2
+  description: 
+  graphData:
+    nodes:
+    - id: {x: 1, y: -4}
+      type: 1
+      isDestroyed: 0
+    - id: {x: 3, y: -4}
+      type: 2
+      isDestroyed: 0
+    - id: {x: 1, y: -3}
+      type: 0
+      isDestroyed: 0
+    - id: {x: 2, y: -3}
+      type: 0
+      isDestroyed: 0
+    - id: {x: 2, y: -2}
+      type: 0
+      isDestroyed: 0
+    - id: {x: 2, y: -4}
+      type: 0
+      isDestroyed: 0
+    - id: {x: 2, y: -5}
+      type: 0
+      isDestroyed: 0
+    - id: {x: 2, y: -6}
+      type: 0
+      isDestroyed: 0
+    - id: {x: 3, y: -6}
+      type: 0
+      isDestroyed: 0
+    - id: {x: 3, y: -5}
+      type: 0
+      isDestroyed: 0
+    - id: {x: 1, y: -2}
+      type: 0
+      isDestroyed: 0
+    edges:
+    - fromId: {x: 1, y: -3}
+      toId: {x: 1, y: -4}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 1, y: -3}
+      toId: {x: 1, y: -2}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 1, y: -2}
+      toId: {x: 2, y: -2}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 2, y: -2}
+      toId: {x: 2, y: -3}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 2, y: -3}
+      toId: {x: 2, y: -4}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 2, y: -4}
+      toId: {x: 2, y: -5}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 2, y: -5}
+      toId: {x: 2, y: -6}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 2, y: -6}
+      toId: {x: 3, y: -6}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 3, y: -6}
+      toId: {x: 3, y: -5}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 3, y: -4}
+      toId: {x: 3, y: -5}
+      type: 0
+      isUsed: 0
+    graphName: Level2
+  nodeSize: 30
+  edgeWidth: 6

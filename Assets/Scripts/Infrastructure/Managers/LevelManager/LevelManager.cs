@@ -34,6 +34,7 @@ namespace Infrastructure.Managers.LevelManager
         public event Action OnLevelCompleted;
         public event Action OnLevelFailed;
         public event Action<Graph> OnGridGenerated;
+        public event Action<Graph> OnGridInstantiated;
 
         private Vector3 _pivotPoint;
         private Graph _currentGraph;
@@ -145,7 +146,7 @@ namespace Infrastructure.Managers.LevelManager
             _edgesParent = edgesObject.transform;
         }
 
-        private void GenerateGrid()
+        private async void GenerateGrid()
         {
             // Initialize grid system first
             InitializeGridSystem();
@@ -172,9 +173,14 @@ namespace Infrastructure.Managers.LevelManager
             // Apply vertical offset to Level object after all content is generated
             ApplyVerticalOffsetToLevel(_levelObject);
             
-            // Notify that grid is fully generated
-            Debug.Log($"[LevelManager] Invoking OnGridGenerated event");
+            // Notify that grid is generated (backward compatibility)
             OnGridGenerated?.Invoke(_currentGraph);
+            
+            // Wait for next frame to ensure all GameObjects and transforms are properly updated
+            await UniTask.NextFrame();
+            
+            // Notify that grid is fully instantiated and ready for use
+            OnGridInstantiated?.Invoke(_currentGraph);
         }
 
         private Vector3 CalculateBoundingBoxCenter()
