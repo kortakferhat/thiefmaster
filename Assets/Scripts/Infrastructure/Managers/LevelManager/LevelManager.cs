@@ -345,7 +345,7 @@ namespace Infrastructure.Managers.LevelManager
                 NodeType.Breakable => PoolKeys.BreakableNode,
                 NodeType.Redirector => PoolKeys.RedirectorNode,
                 NodeType.Trap => PoolKeys.TrapNode,
-                NodeType.Enemy => PoolKeys.Enemy,
+                NodeType.Enemy => PoolKeys.BaseNode, // Enemy nodes use normal node prefab
                 _ => PoolKeys.BaseNode
             };
         }

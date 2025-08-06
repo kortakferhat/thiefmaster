@@ -49,4 +49,21 @@ namespace Gameplay.Events
             TurnNumber = turnNumber;
         }
     }
+    
+    /// <summary>
+    /// Event triggered when an enemy is eliminated
+    /// </summary>
+    public class EnemyEliminatedEvent : ITurnEvent
+    {
+        public Vector2Int EnemyNodeId { get; }
+        public Vector2Int PlayerNodeId { get; }
+        public int TurnNumber { get; }
+        
+        public EnemyEliminatedEvent(Vector2Int enemyNodeId, Vector2Int playerNodeId, int turnNumber)
+        {
+            EnemyNodeId = enemyNodeId;
+            PlayerNodeId = playerNodeId;
+            TurnNumber = turnNumber;
+        }
+    }
 }

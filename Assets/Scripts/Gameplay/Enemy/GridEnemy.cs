@@ -134,12 +134,57 @@ namespace Gameplay.Enemy
         
         private void CheckPlayerDetection(Vector2Int playerNodeId)
         {
-            // For now, just log if player is on the same node
+            // Check if player is on the same node as enemy
             if (playerNodeId == _currentNodeId)
             {
-                Debug.Log($"[GridEnemy] PLAYER DETECTED! Player entered enemy node {_currentNodeId} - Game Over!");
+                Debug.Log($"[GridEnemy] Player reached enemy node {_currentNodeId} - Enemy eliminated!");
+                RemoveThisEnemy();
+                return;
+            }
+            
+            // Check if player is in vision range (1 depth)
+            if (IsPlayerInVision(playerNodeId))
+            {
+                Debug.Log($"[GridEnemy] Player spotted at {playerNodeId} - Game Over!");
                 // TODO: Trigger game over event
             }
+        }
+        
+        /// <summary>
+        /// Check if player position is within enemy's vision (1 depth, facing direction)
+        /// Only sees along valid edges, not through walls
+        /// </summary>
+        private bool IsPlayerInVision(Vector2Int playerPosition)
+        {
+            // Get current graph to check valid connections
+            var graph = _levelManager.GetCurrentGraph();
+            
+            // Calculate the node we're looking at (1 depth in facing direction)
+            var visionNode = _currentNodeId + facingDirection;
+            
+            // Player is in vision if:
+            // 1. They're at the node we're looking at
+            // 2. There's a valid edge connection to that node
+            if (playerPosition == visionNode)
+            {
+                // Check if there's a valid path from enemy to vision node
+                return graph.CanMoveFromTo(_currentNodeId, visionNode);
+            }
+            
+            return false;
+        }
+        
+        /// <summary>
+        /// Remove this enemy from the game
+        /// </summary>
+        private void RemoveThisEnemy()
+        {
+            // Publish enemy eliminated event
+            EventBus.Publish(new EnemyEliminatedEvent(_currentNodeId, _currentNodeId, _turnManager.CurrentTurn));
+            
+            // Get GridEnemyManager and remove this enemy
+            var enemyManager = ServiceLocator.Get<IGridEnemyManager>();
+            enemyManager.RemoveEnemy(this);
         }
         
         private void OnDestroy()
@@ -190,6 +235,21 @@ namespace Gameplay.Enemy
             var facingWorldPos = worldPos + new Vector3(facingDirection.x, 0, -facingDirection.y) * 0.5f;
             Gizmos.DrawLine(worldPos, facingWorldPos);
             Gizmos.DrawWireSphere(facingWorldPos, 0.1f);
+            
+            // Draw vision range (if there's a valid connection)
+            var graph = _levelManager.GetCurrentGraph();
+            var visionNode = _currentNodeId + facingDirection;
+            
+            if (graph.CanMoveFromTo(_currentNodeId, visionNode))
+            {
+                var visionWorldPos = _levelManager.GetNodeActualWorldPosition(visionNode);
+                Gizmos.color = new Color(1f, 0f, 0f, 0.3f); // Semi-transparent red
+                Gizmos.DrawCube(visionWorldPos, Vector3.one * 0.6f);
+                
+                // Draw vision line
+                Gizmos.color = Color.red;
+                Gizmos.DrawLine(worldPos, visionWorldPos);
+            }
         }
     }
 }
