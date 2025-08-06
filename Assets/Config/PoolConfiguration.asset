@@ -52,3 +52,6 @@ MonoBehaviour:
   - tag: SlipperyEdge
     prefab: {fileID: 7663685935667842189, guid: d7d53f79a78f0446fb2913147a4f898d, type: 3}
     size: 10
+  - tag: Enemy
+    prefab: {fileID: 4054424366307308724, guid: 98ebd8359c2e64f96bd3785d4093aa8d, type: 3}
+    size: 10

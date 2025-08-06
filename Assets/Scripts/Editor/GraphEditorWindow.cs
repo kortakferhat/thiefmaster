@@ -930,6 +930,12 @@ namespace Editor
                 DrawCircle(nodePos, nodeSize / 2, nodeColor);
                 DrawCircleBorder(nodePos, nodeSize / 2, Color.black, 2f);
 
+                // Draw facing direction for enemy nodes
+                if (nodeData.type == NodeType.Enemy)
+                {
+                    DrawEnemyFacingDirection(nodePos, nodeData.enemyFacingDirection, nodeSize);
+                }
+
                 // Draw node label with better positioning
                 var labelRect = new Rect(nodePos.x - 30, nodePos.y + nodeSize / 2 + 5, 60, 20);
                 var style = new GUIStyle(EditorStyles.label)
@@ -1100,6 +1106,31 @@ namespace Editor
             Handles.BeginGUI();
             Handles.color = color;
             Handles.DrawWireDisc(center, Vector3.forward, radius + borderWidth / 2);
+            Handles.EndGUI();
+        }
+        
+        private void DrawEnemyFacingDirection(Vector2 nodePos, Vector2Int facingDirection, float nodeSize)
+        {
+            if (facingDirection == Vector2Int.zero) return;
+            
+            // Calculate direction vector (note: Y is inverted in screen space)
+            var direction = new Vector2(facingDirection.x, -facingDirection.y);
+            var directionLength = nodeSize * 0.4f;
+            var arrowLength = nodeSize * 0.15f;
+            
+            // Draw direction line
+            var endPos = nodePos + direction * directionLength;
+            Handles.BeginGUI();
+            Handles.color = Color.yellow;
+            Handles.DrawLine(nodePos, endPos);
+            
+            // Draw arrow head
+            var perpendicular = new Vector2(-direction.y, direction.x).normalized;
+            var arrowLeft = endPos - direction * arrowLength + perpendicular * arrowLength * 0.5f;
+            var arrowRight = endPos - direction * arrowLength - perpendicular * arrowLength * 0.5f;
+            
+            var arrowPoints = new Vector3[] { endPos, arrowLeft, arrowRight };
+            Handles.DrawAAConvexPolygon(arrowPoints);
             Handles.EndGUI();
         }
 
@@ -1570,6 +1601,22 @@ namespace Editor
                     selectedNode.type = (NodeType)EditorGUILayout.EnumPopup("Type", selectedNode.type);
                     selectedNode.isDestroyed = EditorGUILayout.Toggle("Destroyed", selectedNode.isDestroyed);
                     
+                    // Enemy-specific properties
+                    if (selectedNode.type == NodeType.Enemy)
+                    {
+                        EditorGUILayout.Space();
+                        EditorGUILayout.LabelField("Enemy Properties", EditorStyles.boldLabel);
+                        selectedNode.enemyFacingDirection = EditorGUILayout.Vector2IntField("Facing Direction", selectedNode.enemyFacingDirection);
+                        
+                        // Quick buttons for common directions
+                        EditorGUILayout.BeginHorizontal();
+                        if (GUILayout.Button("↑ Up")) selectedNode.enemyFacingDirection = Vector2Int.up;
+                        if (GUILayout.Button("↓ Down")) selectedNode.enemyFacingDirection = Vector2Int.down;
+                        if (GUILayout.Button("← Left")) selectedNode.enemyFacingDirection = Vector2Int.left;
+                        if (GUILayout.Button("→ Right")) selectedNode.enemyFacingDirection = Vector2Int.right;
+                        EditorGUILayout.EndHorizontal();
+                    }
+                    
                     EditorGUILayout.Space();
                     
                     // Show Delete button only if node is NOT Start or Goal
@@ -1696,7 +1743,7 @@ namespace Editor
             EditorGUILayout.LabelField("• Breakable (Yellow): Breakable node");
             EditorGUILayout.LabelField("• Redirector (Blue): Direction changer");
             EditorGUILayout.LabelField("• Trap (Black): Trap");
-            EditorGUILayout.LabelField("• Enemy (Magenta): Enemy");
+            EditorGUILayout.LabelField("• Enemy (Magenta): Stationary Guard with facing direction");
             EditorGUILayout.Space();
             
             // Edge Types

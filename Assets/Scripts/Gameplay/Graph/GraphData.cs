@@ -10,12 +10,16 @@ namespace Gameplay.Graph
         public Vector2Int id;
         public NodeType type;
         public bool isDestroyed;
+        
+        // Enemy-specific properties
+        [SerializeField] public Vector2Int enemyFacingDirection = Vector2Int.up;
 
         public NodeData(Vector2Int id, NodeType type, bool isDestroyed = false)
         {
             this.id = id;
             this.type = type;
             this.isDestroyed = isDestroyed;
+            this.enemyFacingDirection = Vector2Int.up; // Default facing up
         }
 
         public Node ToNode()

@@ -84,5 +84,26 @@ namespace Gameplay.Graph
         {
             return nodes.Values;
         }
+        
+        /// <summary>
+        /// Get all nodes of a specific type
+        /// </summary>
+        public IEnumerable<Node> GetNodesByType(NodeType nodeType)
+        {
+            return nodes.Values.Where(node => node.Type == nodeType);
+        }
+        
+        /// <summary>
+        /// Update node type at runtime (e.g., when enemy moves from starting position)
+        /// </summary>
+        public void SetNodeType(Vector2Int nodeId, NodeType newType)
+        {
+            var node = GetNode(nodeId);
+            if (node != null)
+            {
+                node.Type = newType;
+                Debug.Log($"[Graph] Node {nodeId} type changed to {newType}");
+            }
+        }
     }
 }

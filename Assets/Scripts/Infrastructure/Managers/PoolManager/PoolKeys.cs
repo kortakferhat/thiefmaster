@@ -14,7 +14,6 @@ namespace Infrastructure.Managers.PoolManager
         public static string BreakableNode = "BreakableNode";
         public static string RedirectorNode = "RedirectorNode";
         public static string TrapNode = "TrapNode";
-        public static string EnemyNode = "EnemyNode";
         
         // Grid Edge Types
         public static string BaseEdge = "BaseEdge";

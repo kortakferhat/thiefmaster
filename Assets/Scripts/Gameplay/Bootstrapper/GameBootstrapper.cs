@@ -68,6 +68,10 @@ namespace Gameplay.Bootstrapper
             turnManager.Initialize();
             ServiceLocator.Register<ITurnManager>(turnManager);
             
+            var gridEnemyManager = Instantiate(new GameObject("GridEnemyManager"), managersParent).AddComponent<GridEnemyManager>();
+            gridEnemyManager.Initialize(levelManager, gameManager);
+            ServiceLocator.Register<IGridEnemyManager>(gridEnemyManager);
+            
             // Initialize character after level is loaded (level is already loaded in levelManager.Initialize())
             characterController.Initialize();
             cameraFollow.Initialize();

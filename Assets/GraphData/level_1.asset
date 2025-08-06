@@ -19,36 +19,47 @@ MonoBehaviour:
     - id: {x: 3, y: -1}
       type: 2
       isDestroyed: 0
+      enemyFacingDirection: {x: 0, y: 0}
     - id: {x: 3, y: -5}
       type: 1
       isDestroyed: 0
+      enemyFacingDirection: {x: 0, y: 0}
     - id: {x: 3, y: -4}
       type: 0
       isDestroyed: 0
+      enemyFacingDirection: {x: 0, y: 0}
     - id: {x: 2, y: -4}
       type: 0
       isDestroyed: 0
+      enemyFacingDirection: {x: 0, y: 0}
     - id: {x: 4, y: -4}
       type: 0
       isDestroyed: 0
+      enemyFacingDirection: {x: 0, y: 0}
     - id: {x: 3, y: -3}
       type: 6
       isDestroyed: 0
+      enemyFacingDirection: {x: 0, y: 1}
     - id: {x: 4, y: -3}
       type: 0
       isDestroyed: 0
+      enemyFacingDirection: {x: 0, y: 0}
     - id: {x: 2, y: -3}
       type: 6
       isDestroyed: 0
+      enemyFacingDirection: {x: 0, y: -1}
     - id: {x: 2, y: -2}
       type: 0
       isDestroyed: 0
+      enemyFacingDirection: {x: 0, y: 0}
     - id: {x: 3, y: -2}
       type: 0
       isDestroyed: 0
+      enemyFacingDirection: {x: 0, y: 0}
     - id: {x: 4, y: -2}
       type: 0
       isDestroyed: 0
+      enemyFacingDirection: {x: 0, y: 0}
     edges:
     - fromId: {x: 3, y: -4}
       toId: {x: 2, y: -4}

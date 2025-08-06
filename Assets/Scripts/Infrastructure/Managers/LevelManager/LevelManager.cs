@@ -47,7 +47,7 @@ namespace Infrastructure.Managers.LevelManager
                 _gridConfig = await Addressables.LoadAssetAsync<GridConfig>("GridConfig").ToUniTask();
                 
                 // Load default level
-                LoadLevel(2);
+                LoadLevel(1);
             }
             catch (Exception ex)
             {
@@ -313,7 +313,7 @@ namespace Infrastructure.Managers.LevelManager
                                _poolManager.Despawn(PoolKeys.BreakableNode, node) ||
                                _poolManager.Despawn(PoolKeys.RedirectorNode, node) ||
                                _poolManager.Despawn(PoolKeys.TrapNode, node) ||
-                               _poolManager.Despawn(PoolKeys.EnemyNode, node);
+                               _poolManager.Despawn(PoolKeys.Enemy, node);
                 
                 if (!despawned)
                     UnityEngine.Object.Destroy(node);
@@ -345,7 +345,7 @@ namespace Infrastructure.Managers.LevelManager
                 NodeType.Breakable => PoolKeys.BreakableNode,
                 NodeType.Redirector => PoolKeys.RedirectorNode,
                 NodeType.Trap => PoolKeys.TrapNode,
-                NodeType.Enemy => PoolKeys.EnemyNode,
+                NodeType.Enemy => PoolKeys.Enemy,
                 _ => PoolKeys.BaseNode
             };
         }
@@ -372,6 +372,11 @@ namespace Infrastructure.Managers.LevelManager
         public GridConfig GetGridConfig()
         {
             return _gridConfig;
+        }
+        
+        public Graph GetCurrentGraph()
+        {
+            return _currentGraph;
         }
 
         public void ResetLevelProgress()

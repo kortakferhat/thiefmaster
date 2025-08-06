@@ -34,5 +34,8 @@ namespace Infrastructure.Managers.LevelManager
         
         // Grid Configuration Methods
         GridConfig GetGridConfig();
+        
+        // Graph Access Methods
+        Graph GetCurrentGraph();
     }
 } 
