@@ -1,8 +1,10 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Gameplay.Graph;
+using Gameplay.Events;
 using Infrastructure.Managers.LevelManager;
 using TowerClicker.Infrastructure;
+using Infrastructure;
 using DG.Tweening;
 
 namespace Gameplay.Character
@@ -23,6 +25,7 @@ namespace Gameplay.Character
         private InputSystem_Actions _playerInputActions;
         private Vector2Int _currentNodeId;
         private ILevelManager _levelManager;
+        private ITurnManager _turnManager;
         private bool _isMoving = false;
         private Tween _currentMoveTween;
         
@@ -31,6 +34,8 @@ namespace Gameplay.Character
             base.Initialize();
             
             _levelManager = ServiceLocator.Get<ILevelManager>();
+            _turnManager = ServiceLocator.Get<ITurnManager>();
+            
             _levelManager.OnLevelLoaded += OnLevelLoaded;
             _levelManager.OnGridInstantiated += OnGridInstantiated;
             
@@ -63,6 +68,7 @@ namespace Gameplay.Character
         private void OnMovementPerformed(InputAction.CallbackContext context)
         {
             if (_isMoving) return;
+            if (_turnManager.IsTurnInProgress) return; // Prevent input during turn processing
             
             var input = context.ReadValue<Vector2>();
             var direction = GetDirectionFromInput(input);
@@ -77,7 +83,13 @@ namespace Gameplay.Character
         {
             if (_levelManager.TryMoveToNode(_currentNodeId, direction, out Vector2Int targetNodeId))
             {
+                var previousNodeId = _currentNodeId;
                 _currentNodeId = targetNodeId;
+                
+                // Start turn and trigger events
+                _turnManager.StartNextTurn();
+                EventBus.Publish(new PlayerMovedEvent(previousNodeId, _currentNodeId, _turnManager.CurrentTurn));
+                
                 AnimateToPosition(direction);
             }
         }
@@ -131,6 +143,11 @@ namespace Gameplay.Character
         {
             _isMoving = false;
             _currentMoveTween = null;
+            
+            // Complete the turn after movement animation finishes
+            _turnManager.CompleteTurn();
+            
+            Debug.Log($"[CharacterController] Player movement completed at node {_currentNodeId}, Turn {_turnManager.CurrentTurn} finished");
         }
         
         private void UpdateCharacterPosition()

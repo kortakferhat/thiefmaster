@@ -64,6 +64,10 @@ namespace Gameplay.Bootstrapper
             tooltipManager.Initialize(poolManager, tooltipsRoot);
             ServiceLocator.Register<ITooltipManager>(tooltipManager);
             
+            var turnManager = new TurnManager();
+            turnManager.Initialize();
+            ServiceLocator.Register<ITurnManager>(turnManager);
+            
             // Initialize character after level is loaded (level is already loaded in levelManager.Initialize())
             characterController.Initialize();
             cameraFollow.Initialize();
