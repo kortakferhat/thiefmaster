@@ -16,6 +16,10 @@ namespace Gameplay.Character
         [SerializeField] private float moveDuration = 0.3f;
         [SerializeField] private Ease moveEase = Ease.OutQuad;
         
+        [Header("Rotation Settings")]
+        [SerializeField] private float rotationDuration = 0.2f;
+        [SerializeField] private Ease rotationEase = Ease.OutQuad;
+        
         private InputSystem_Actions _playerInputActions;
         private Vector2Int _currentNodeId;
         private ILevelManager _levelManager;
@@ -74,7 +78,7 @@ namespace Gameplay.Character
             if (_levelManager.TryMoveToNode(_currentNodeId, direction, out Vector2Int targetNodeId))
             {
                 _currentNodeId = targetNodeId;
-                AnimateToPosition();
+                AnimateToPosition(direction);
             }
         }
         
@@ -90,7 +94,21 @@ namespace Gameplay.Character
             }
         }
         
-        private void AnimateToPosition()
+        private Vector3 GetRotationFromDirection(Vector2Int direction)
+        {
+            if (direction == Vector2Int.right)
+                return new Vector3(0, 90, 0);
+            else if (direction == Vector2Int.left)
+                return new Vector3(0, -90, 0);
+            else if (direction == Vector2Int.up)
+                return new Vector3(0, 0, 0);
+            else if (direction == Vector2Int.down)
+                return new Vector3(0, 180, 0);
+            
+            return Vector3.zero;
+        }
+        
+        private void AnimateToPosition(Vector2Int direction)
         {
             // Kill previous tween if it exists
             if (_currentMoveTween != null && _currentMoveTween.IsActive())
@@ -100,9 +118,11 @@ namespace Gameplay.Character
             
             _isMoving = true;
             var targetPos = _levelManager.GetNodeActualWorldPosition(_currentNodeId);
+            var targetRotation = GetRotationFromDirection(direction);
             
-            _currentMoveTween = characterTransform.DOMove(targetPos, moveDuration)
-                .SetEase(moveEase)
+            _currentMoveTween = DOTween.Sequence()
+                .Insert(0f, characterTransform.DORotate(targetRotation, rotationDuration).SetEase(rotationEase))
+                .Insert(0f, characterTransform.DOMove(targetPos, moveDuration).SetEase(moveEase))
                 .OnComplete(OnMoveComplete)
                 .SetAutoKill(true);
         }
@@ -126,6 +146,10 @@ namespace Gameplay.Character
             {
                 _currentMoveTween.Kill();
             }
+            _currentMoveTween = null;
+            
+            // Kill all tweens on this transform to be safe
+            characterTransform.DOKill();
             
             _playerInputActions.Player.Move.performed -= OnMovementPerformed;
             _playerInputActions.Player.Disable();
