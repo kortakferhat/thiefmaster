@@ -17,5 +17,6 @@ namespace TowerClicker.Infrastructure
         GridEnemy GetEnemyAtNode(Vector2Int nodeId);
         bool IsNodeOccupiedByEnemy(Vector2Int nodeId);
         System.Collections.Generic.IEnumerable<Vector2Int> GetAllEnemyPositions();
+        void OnLevelRestart();
     }
 }

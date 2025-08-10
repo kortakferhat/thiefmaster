@@ -14,5 +14,6 @@ namespace TowerClicker.Infrastructure
         void StartNextTurn();
         void CompleteTurn();
         void ResetTurns();
+        void ResetForNewLevel();
     }
 }

@@ -24,7 +24,7 @@ namespace Gameplay.Enemy.Behaviours
                 {
                     // Player is at target node - move there and trigger game over
                     enemy.MoveToNode(targetNode);
-                    EventBus.Publish(new GameOverEvent(enemy.TurnManager.CurrentTurn));
+                    EventBus.Publish(new LoseEvent(enemy.TurnManager.CurrentTurn, LoseReason.EnemyContact, targetNode));
                     return;
                 }
                 
@@ -45,7 +45,7 @@ namespace Gameplay.Enemy.Behaviours
                     {
                         // Player is at target node - move there and trigger game over
                         enemy.MoveToNode(newTargetNode);
-                        EventBus.Publish(new GameOverEvent(enemy.TurnManager.CurrentTurn));
+                        EventBus.Publish(new LoseEvent(enemy.TurnManager.CurrentTurn, LoseReason.EnemyContact, newTargetNode));
                         return;
                     }
                     

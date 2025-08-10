@@ -1,9 +1,11 @@
+using Gameplay.Character;
 using Gameplay.Graph;
 using Infrastructure.Components;
 using Infrastructure.Managers;
 using Infrastructure.Managers.EconomyManager;
 using Infrastructure.Managers.LevelManager;
 using Infrastructure.Managers.TooltipManager;
+using Infrastructure.Input;
 using TowerClicker.Infrastructure;
 using TowerClicker.Infrastructure.Managers.CameraManager;
 using UnityEngine;
@@ -35,20 +37,21 @@ namespace Gameplay.Bootstrapper
 
         public async void Initialize()
         {
-            var gameManager = new GameManager();
+            var gameManagerGO = Instantiate(new GameObject("GameManager"), managersParent);
+            var gameManager = gameManagerGO.AddComponent<GameManager>();
             gameManager.Initialize();
             ServiceLocator.Register<IGameManager>(gameManager);
             
             var economyManager = new EconomyManager(0);
             ServiceLocator.Register<IEconomyManager>(economyManager);
             
-            var levelManager = new LevelManager();
-            await levelManager.Initialize();
-            ServiceLocator.Register<ILevelManager>(levelManager);
-            
             var poolManager = Instantiate(new GameObject("PoolManager"), managersParent).AddComponent<PoolManager>();
             await poolManager.Initialize();
             ServiceLocator.Register<IPoolManager>(poolManager);
+            
+            var levelManager = new LevelManager();
+            await levelManager.Initialize();
+            ServiceLocator.Register<ILevelManager>(levelManager);
             
             var particleManager = Instantiate(new GameObject("ParticleManager"), managersParent).AddComponent<ParticleManager>();
             particleManager.Initialize(poolManager);
@@ -74,7 +77,15 @@ namespace Gameplay.Bootstrapper
             
             // Initialize character after level is loaded (level is already loaded in levelManager.Initialize())
             characterController.Initialize();
+            ServiceLocator.Register<ICharacterController>(characterController);
             cameraFollow.Initialize();
+            
+            // Initialize keyboard test input component for easy testing
+            var keyboardTestInput = gameObject.AddComponent<KeyboardTestInput>();
+            if (keyboardTestInput != null)
+            {
+                Debug.Log("[GameBootstrapper] KeyboardTestInput component initialized successfully");
+            }
             
             //
             

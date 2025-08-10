@@ -225,7 +225,7 @@ namespace Gameplay.Enemy
             if (IsPlayerInVision(playerNodeId))
             {
                 Debug.Log($"[GridEnemy] Player spotted at {playerNodeId} - Game Over!");
-                EventBus.Publish(new GameOverEvent(_turnManager.CurrentTurn));
+                EventBus.Publish(new LoseEvent(_turnManager.CurrentTurn, LoseReason.EnemyDetection, _currentNodeId));
                 return;
             }
         }

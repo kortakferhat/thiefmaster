@@ -79,4 +79,47 @@ namespace Gameplay.Events
             TurnNumber = turnNumber;
         }
     }
+    
+    /// <summary>
+    /// Event triggered when player wins (reaches goal node)
+    /// </summary>
+    public class WinEvent : ITurnEvent
+    {
+        public int TurnNumber { get; }
+        public Vector2Int GoalNodeId { get; }
+        
+        public WinEvent(int turnNumber, Vector2Int goalNodeId)
+        {
+            TurnNumber = turnNumber;
+            GoalNodeId = goalNodeId;
+        }
+    }
+    
+    /// <summary>
+    /// Event triggered when player loses (enemy contact or detection)
+    /// </summary>
+    public class LoseEvent : ITurnEvent
+    {
+        public int TurnNumber { get; }
+        public LoseReason Reason { get; }
+        public Vector2Int EnemyNodeId { get; }
+        
+        public LoseEvent(int turnNumber, LoseReason reason, Vector2Int enemyNodeId = default)
+        {
+            TurnNumber = turnNumber;
+            Reason = reason;
+            EnemyNodeId = enemyNodeId;
+        }
+    }
+    
+    /// <summary>
+    /// Reasons why the player can lose
+    /// </summary>
+    public enum LoseReason
+    {
+        EnemyContact,      // Player moved to enemy's node
+        EnemyDetection,    // Player was seen by enemy vision
+        InvalidMove,       // Player tried to move to invalid location
+        TimeOut           // Turn limit exceeded (if implemented)
+    }
 }

@@ -8,17 +8,22 @@ namespace TowerClicker.Infrastructure
         MainMenu,
         Game,
         Pause,
-        GameOver
+        GameOver,
+        Win,
+        Lose
     }
     
     public interface IGameManager : IService
     {
-        GameState State { get; }
+        GameState State { get; set; }
         public event Action<GameState> OnStateChanged;
         void Initialize();
         void StartGame();
         void PauseGame();
         void ResumeGame();
         void EndGame();
+        void WinGame();
+        void LoseGame();
+        void RestartGame();
     }
 }

@@ -18,6 +18,14 @@ namespace Gameplay.Graph
         }
 
         /// <summary>
+        /// Get the goal node for win condition checking
+        /// </summary>
+        public Node GetGoalNode()
+        {
+            return nodes.Values.FirstOrDefault(node => node.Type == NodeType.Goal);
+        }
+
+        /// <summary>
         /// Add a bidirectional connection between two nodes
         /// O(1) operation - much faster than the old AddEdge + GetEdge pattern
         /// </summary>

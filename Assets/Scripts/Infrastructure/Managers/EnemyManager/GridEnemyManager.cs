@@ -46,6 +46,48 @@ namespace TowerClicker.Infrastructure
             SpawnEnemiesFromGraph(graph);
         }
         
+        /// <summary>
+        /// Handle level restart by restoring original enemy nodes and respawning enemies
+        /// </summary>
+        public void OnLevelRestart()
+        {
+            if (showDebugLogs)
+                Debug.Log("[GridEnemyManager] Handling level restart");
+            
+            // Clear existing enemies first
+            ClearAllEnemies();
+            
+            // Get the current level graph
+            var currentLevel = _levelManager.CurrentLevelGraph;
+            if (currentLevel == null || currentLevel.graphData == null)
+            {
+                if (showDebugLogs)
+                    Debug.LogWarning("[GridEnemyManager] No level data available for restart");
+                return;
+            }
+            
+            // Restore original enemy nodes from the level data
+            var originalEnemyNodes = currentLevel.graphData.nodes
+                .Where(n => n.type == NodeType.Enemy)
+                .ToList();
+            
+            if (showDebugLogs)
+                Debug.Log($"[GridEnemyManager] Found {originalEnemyNodes.Count} original enemy nodes for restart");
+            
+            // Spawn enemies at their original positions
+            foreach (var enemyNodeData in originalEnemyNodes)
+            {
+                var facingDirection = enemyNodeData.enemyFacingDirection;
+                if (facingDirection == Vector2Int.zero)
+                    facingDirection = Vector2Int.up;
+                
+                SpawnEnemyAtNode(enemyNodeData.id, facingDirection);
+                
+                // Note: We don't modify the original level data here
+                // The graph will be handled by the normal OnGridInstantiated flow
+            }
+        }
+        
         private void SpawnEnemiesFromGraph(Graph graph)
         {
             // Clear existing enemies
@@ -67,6 +109,7 @@ namespace TowerClicker.Infrastructure
                 SpawnEnemyAtNode(enemyNode.Id, facingDirection);
                 
                 // Convert enemy spawn node to normal node since enemy now occupies it
+                // Only do this if we're not in a restart scenario
                 graph.SetNodeType(enemyNode.Id, NodeType.Normal);
             }
         }

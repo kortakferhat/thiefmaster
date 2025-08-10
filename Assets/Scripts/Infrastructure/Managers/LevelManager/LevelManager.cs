@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Gameplay.Graph;
+using Gameplay.Events;
 using Infrastructure.Managers.PoolManager;
 using TowerClicker.Infrastructure;
+using Infrastructure;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using Cysharp.Threading.Tasks;
@@ -21,6 +23,7 @@ namespace Infrastructure.Managers.LevelManager
         private Transform _edgesParent;
         private GameObject _levelObject; // Level object reference
         private IPoolManager _poolManager;
+        private IGameManager _gameManager;
         
         private readonly List<GameObject> _spawnedNodes = new();
         private readonly List<GameObject> _spawnedEdges = new();
@@ -38,6 +41,7 @@ namespace Infrastructure.Managers.LevelManager
 
         private Vector3 _pivotPoint;
         private Graph _currentGraph;
+        private bool _isRestarting = false;
 
         public async Task Initialize()
         {
@@ -45,6 +49,14 @@ namespace Infrastructure.Managers.LevelManager
             {
                 // Load GridConfig from Addressables
                 _gridConfig = await Addressables.LoadAssetAsync<GridConfig>("GridConfig").ToUniTask();
+                
+                // Get required services
+                _poolManager = ServiceLocator.Get<IPoolManager>();
+                _gameManager = ServiceLocator.Get<IGameManager>();
+                
+                // Subscribe to win/lose events
+                EventBus.Subscribe<WinEvent>(OnPlayerWon);
+                EventBus.Subscribe<LoseEvent>(OnPlayerLost);
                 
                 // Load default level
                 LoadLevel(1);
@@ -99,10 +111,68 @@ namespace Infrastructure.Managers.LevelManager
         {
             OnLevelFailed?.Invoke();
         }
+        
+        private void OnPlayerWon(WinEvent winEvent)
+        {
+            Debug.Log($"[LevelManager] Player won level {_currentLevel} at turn {winEvent.TurnNumber}");
+            CompleteLevel();
+            _gameManager?.WinGame();
+        }
+        
+        private void OnPlayerLost(LoseEvent loseEvent)
+        {
+            Debug.Log($"[LevelManager] Player lost level {_currentLevel} at turn {loseEvent.TurnNumber}, reason: {loseEvent.Reason}");
+            FailLevel();
+            _gameManager?.LoseGame();
+        }
 
         public void RestartLevel()
         {
+            Debug.Log($"[LevelManager] Restarting level {_currentLevel}");
+            
+            // Set restart flag to prevent double spawning
+            _isRestarting = true;
+            
+            // Clear current grid first
+            ClearGrid();
+            
+            // Reset game state to playing
+            if (_gameManager != null)
+            {
+                _gameManager.State = GameState.Game;
+            }
+            
+            // Reset turn manager
+            var turnManager = ServiceLocator.Get<ITurnManager>();
+            if (turnManager != null)
+            {
+                turnManager.ResetForNewLevel();
+            }
+            
+            // Regenerate the grid
+            GenerateGrid();
+            
+            // Notify that level is restarted
             OnLevelLoaded?.Invoke(_currentLevelGraph);
+            
+            // Ensure enemies are respawned from original level data
+            // This should happen after the grid is generated but before OnGridInstantiated
+            var gridEnemyManager = ServiceLocator.Get<IGridEnemyManager>();
+            if (gridEnemyManager != null)
+            {
+                gridEnemyManager.OnLevelRestart();
+            }
+            
+            // Reset character to start position
+            var characterController = ServiceLocator.Get<ICharacterController>();
+            if (characterController != null)
+            {
+                characterController.ResetToStartPosition();
+                Debug.Log("[LevelManager] Character reset to start position during restart");
+            }
+            
+            // Reset restart flag
+            _isRestarting = false;
         }
 
         public void NextLevel()
@@ -121,6 +191,7 @@ namespace Infrastructure.Managers.LevelManager
         private void InitializeGridSystem()
         {
             _poolManager = ServiceLocator.Get<IPoolManager>();
+            _gameManager = ServiceLocator.Get<IGameManager>();
             
             // Create root object for rotation
             var rootObject = new GameObject("GridRoot");
@@ -180,7 +251,11 @@ namespace Infrastructure.Managers.LevelManager
             await UniTask.NextFrame();
             
             // Notify that grid is fully instantiated and ready for use
-            OnGridInstantiated?.Invoke(_currentGraph);
+            // Only trigger this event if we're not restarting (to prevent double spawning)
+            if (!_isRestarting)
+            {
+                OnGridInstantiated?.Invoke(_currentGraph);
+            }
         }
 
         private Vector3 CalculateBoundingBoxCenter()
@@ -377,6 +452,13 @@ namespace Infrastructure.Managers.LevelManager
         public Graph GetCurrentGraph()
         {
             return _currentGraph;
+        }
+        
+        private void OnDestroy()
+        {
+            // Unsubscribe from events
+            EventBus.Unsubscribe<WinEvent>(OnPlayerWon);
+            EventBus.Unsubscribe<LoseEvent>(OnPlayerLost);
         }
 
         public void ResetLevelProgress()

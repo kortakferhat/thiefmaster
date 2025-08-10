@@ -66,5 +66,13 @@ namespace TowerClicker.Infrastructure
             
             Debug.Log("[TurnManager] Turns reset");
         }
+        
+        public void ResetForNewLevel()
+        {
+            _currentTurn = 0;
+            _isTurnInProgress = false;
+            
+            Debug.Log("[TurnManager] Reset for new level - turns reset to 0");
+        }
     }
 }

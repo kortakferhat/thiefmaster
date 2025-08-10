@@ -3,13 +3,14 @@ using UnityEngine.InputSystem;
 using Gameplay.Graph;
 using Gameplay.Events;
 using Infrastructure.Managers.LevelManager;
+using Infrastructure.Managers;
 using TowerClicker.Infrastructure;
 using Infrastructure;
 using DG.Tweening;
 
 namespace Gameplay.Character
 {
-    public class CharacterController : BaseEntity
+    public class CharacterController : BaseEntity, ICharacterController
     {
         [Header("Components")]
         [SerializeField] private Transform characterTransform;
@@ -22,12 +23,19 @@ namespace Gameplay.Character
         [SerializeField] private float rotationDuration = 0.2f;
         [SerializeField] private Ease rotationEase = Ease.OutQuad;
         
+        [Header("Debug")]
+        [SerializeField] private bool showDebugLogs = true;
+        
         private InputSystem_Actions _playerInputActions;
         private Vector2Int _currentNodeId;
         private ILevelManager _levelManager;
         private ITurnManager _turnManager;
         private bool _isMoving = false;
         private Tween _currentMoveTween;
+        
+        // Interface properties
+        public Vector2Int CurrentNodeId => _currentNodeId;
+        public bool IsMoving => _isMoving;
         
         public override void Initialize()
         {
@@ -49,20 +57,64 @@ namespace Gameplay.Character
             _playerInputActions.Player.Enable();
         }
         
-        private void OnLevelLoaded(GraphScriptableObject levelGraph)
-        {
-            // Graph is now handled by LevelManager
-        }
-        
         private void OnGridInstantiated(Graph.Graph graph)
         {
             SetStartPosition(graph.GetStartNode());
         }
         
+        private void OnLevelLoaded(GraphScriptableObject levelGraph)
+        {
+            // Reset character to start position when level is restarted
+            var graph = _levelManager.GetCurrentGraph();
+            if (graph != null)
+            {
+                var startNode = graph.GetStartNode();
+                if (startNode != null)
+                {
+                    SetStartPosition(startNode);
+                }
+            }
+        }
+        
         private void SetStartPosition(Node startNode)
         {
+            // Cancel any ongoing movement animations
+            if (_currentMoveTween != null && _currentMoveTween.IsActive())
+            {
+                _currentMoveTween.Kill();
+                _currentMoveTween = null;
+            }
+            
+            // Reset movement state
+            _isMoving = false;
+            
+            // Update current node ID
             _currentNodeId = startNode.Id;
+            
+            // Immediately update character position without animation
             UpdateCharacterPosition();
+            
+            // Reset character rotation to default (facing up)
+            characterTransform.rotation = Quaternion.identity;
+            
+            if (showDebugLogs)
+                Debug.Log($"[CharacterController] Character reset to start position at node {_currentNodeId}");
+        }
+        
+        /// <summary>
+        /// Reset character's movement state and position (can be called externally)
+        /// </summary>
+        public void ResetToStartPosition()
+        {
+            var graph = _levelManager.GetCurrentGraph();
+            if (graph != null)
+            {
+                var startNode = graph.GetStartNode();
+                if (startNode != null)
+                {
+                    SetStartPosition(startNode);
+                }
+            }
         }
         
         private void OnMovementPerformed(InputAction.CallbackContext context)
@@ -83,6 +135,15 @@ namespace Gameplay.Character
         {
             if (_levelManager.TryMoveToNode(_currentNodeId, direction, out Vector2Int targetNodeId))
             {
+                // Check if target node is occupied by enemy
+                var enemyManager = ServiceLocator.Get<IGridEnemyManager>();
+                if (enemyManager != null && enemyManager.IsNodeOccupiedByEnemy(targetNodeId))
+                {
+                    Debug.Log($"[CharacterController] Cannot move to {targetNodeId} - Enemy occupied!");
+                    EventBus.Publish(new LoseEvent(_turnManager.CurrentTurn, LoseReason.EnemyContact, targetNodeId));
+                    return;
+                }
+                
                 var previousNodeId = _currentNodeId;
                 _currentNodeId = targetNodeId;
                 
@@ -144,10 +205,31 @@ namespace Gameplay.Character
             _isMoving = false;
             _currentMoveTween = null;
             
+            // Check if player reached goal node
+            CheckWinCondition();
+            
             // Complete the turn after movement animation finishes
             _turnManager.CompleteTurn();
             
             Debug.Log($"[CharacterController] Player movement completed at node {_currentNodeId}, Turn {_turnManager.CurrentTurn} finished");
+        }
+        
+        /// <summary>
+        /// Check if player has reached the goal node
+        /// </summary>
+        private void CheckWinCondition()
+        {
+            var graph = _levelManager.GetCurrentGraph();
+            var goalNode = graph.GetGoalNode();
+            
+            if (goalNode != null && _currentNodeId == goalNode.Id)
+            {
+                Debug.Log($"[CharacterController] Player reached goal node {_currentNodeId} - Level Complete!");
+                EventBus.Publish(new WinEvent(_turnManager.CurrentTurn, _currentNodeId));
+                
+                // Notify LevelManager
+                _levelManager.CompleteLevel();
+            }
         }
         
         private void UpdateCharacterPosition()
