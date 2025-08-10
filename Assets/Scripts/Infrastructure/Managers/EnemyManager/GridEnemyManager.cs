@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Gameplay.Enemy;
+using Gameplay.Enemy.Behaviours;
 using Gameplay.Graph;
 using Infrastructure.Managers.LevelManager;
 using Infrastructure.Managers.PoolManager;
@@ -107,18 +108,22 @@ namespace TowerClicker.Infrastructure
             gridEnemy.SetPosition(nodeId);
             gridEnemy.SetFacingDirection(facingDirection);
             
-            // Set enemy state from NodeData if available
+            // Set enemy behaviour from NodeData if available
             var nodeData = GetNodeData(nodeId);
             if (nodeData != null)
             {
-                gridEnemy.SetEnemyState(nodeData.enemyState);
+                var behaviour = CreateBehaviourFromType(nodeData.enemyBehaviourType);
+                if (behaviour != null)
+                {
+                    gridEnemy.SetBehaviour(behaviour);
+                }
             }
             
             // Add to active enemies list
             _activeEnemies.Add(gridEnemy);
             
             if (showDebugLogs)
-                Debug.Log($"[GridEnemyManager] Spawned enemy from pool at {nodeId} facing {facingDirection}, state: {nodeData?.enemyState ?? GridEnemy.EnemyState.Stationary}");
+                Debug.Log($"[GridEnemyManager] Spawned enemy from pool at {nodeId} facing {facingDirection}, behaviour: {nodeData?.enemyBehaviourType ?? "Stationary"}");
         }
         
         public void RemoveEnemy(GridEnemy enemy)
@@ -170,6 +175,20 @@ namespace TowerClicker.Infrastructure
         {
             _levelManager.OnGridInstantiated -= OnGridInstantiated;
             ClearAllEnemies();
+        }
+        
+        /// <summary>
+        /// Create enemy behaviour instance from string type
+        /// </summary>
+        private IEnemyBehaviour CreateBehaviourFromType(string behaviourType)
+        {
+            return behaviourType switch
+            {
+                "Stationary" => new StationaryBehaviour(),
+                "Patrol" => new PatrolBehaviour(),
+                "MovingTarget" => new MovingTargetBehaviour(),
+                _ => new StationaryBehaviour() // Default fallback
+            };
         }
         
         // Debug method to manually spawn test enemies

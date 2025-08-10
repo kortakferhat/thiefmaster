@@ -14,7 +14,7 @@ namespace Gameplay.Graph
         
         // Enemy-specific properties
         [SerializeField] public Vector2Int enemyFacingDirection = Vector2Int.up;
-        [SerializeField] public GridEnemy.EnemyState enemyState = GridEnemy.EnemyState.Stationary;
+        [SerializeField] public string enemyBehaviourType = "Stationary";
 
         public NodeData(Vector2Int id, NodeType type, bool isDestroyed = false)
         {

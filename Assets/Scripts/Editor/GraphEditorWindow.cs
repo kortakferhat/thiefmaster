@@ -1618,13 +1618,20 @@ namespace Editor
                         if (GUILayout.Button("→ Right")) selectedNode.enemyFacingDirection = Vector2Int.right;
                         EditorGUILayout.EndHorizontal();
                         
-                        // Enemy state selection
+                        // Enemy behaviour selection
                         EditorGUILayout.Space();
-                        selectedNode.enemyState = (GridEnemy.EnemyState)EditorGUILayout.EnumPopup("Behavior State", selectedNode.enemyState);
+                        selectedNode.enemyBehaviourType = EditorGUILayout.TextField("Behaviour Type", selectedNode.enemyBehaviourType);
                         
-                        // State description
-                        string stateDescription = GetEnemyStateDescription(selectedNode.enemyState);
-                        EditorGUILayout.HelpBox(stateDescription, MessageType.Info);
+                        // Quick buttons for common behaviours
+                        EditorGUILayout.BeginHorizontal();
+                        if (GUILayout.Button("Stationary")) selectedNode.enemyBehaviourType = "Stationary";
+                        if (GUILayout.Button("Patrol")) selectedNode.enemyBehaviourType = "Patrol";
+                        if (GUILayout.Button("MovingTarget")) selectedNode.enemyBehaviourType = "MovingTarget";
+                        EditorGUILayout.EndHorizontal();
+                        
+                        // Behaviour description
+                        string behaviourDescription = GetEnemyBehaviourDescription(selectedNode.enemyBehaviourType);
+                        EditorGUILayout.HelpBox(behaviourDescription, MessageType.Info);
                     }
                     
                     EditorGUILayout.Space();
@@ -1861,19 +1868,15 @@ namespace Editor
             }
         }
 
-        private string GetEnemyStateDescription(GridEnemy.EnemyState state)
+        private string GetEnemyBehaviourDescription(string behaviourType)
         {
-            switch (state)
+            return behaviourType switch
             {
-                case GridEnemy.EnemyState.Stationary:
-                    return "Enemy stays in place, only detects player in vision range.";
-                case GridEnemy.EnemyState.Patrol:
-                    return "Enemy patrols back and forth in facing direction.";
-                case GridEnemy.EnemyState.MovingTarget:
-                    return "Enemy follows player if within 1 edge distance, otherwise becomes stationary.";
-                default:
-                    return "Unknown enemy state.";
-            }
+                "Stationary" => "Enemy stays in place, only detects player in vision range.",
+                "Patrol" => "Enemy patrols back and forth in facing direction.",
+                "MovingTarget" => "Enemy follows player if within 1 edge distance, otherwise becomes stationary.",
+                _ => "Unknown enemy behaviour type."
+            };
         }
     }
 } 

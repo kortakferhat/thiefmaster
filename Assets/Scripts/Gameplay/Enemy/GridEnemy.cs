@@ -6,6 +6,7 @@ using Infrastructure;
 using DG.Tweening;
 using Infrastructure.Managers;
 using TowerClicker.Infrastructure;
+using Gameplay.Enemy.Behaviours;
 
 namespace Gameplay.Enemy
 {
@@ -14,17 +15,10 @@ namespace Gameplay.Enemy
     /// </summary>
     public class GridEnemy : BaseEntity, IPoolable
     {
-        public enum EnemyState
-        {
-            Stationary,      // Sabit duran, sadece vision detection
-            Patrol,          // Git-gel yapan
-            MovingTarget     // Player'ı takip eden
-        }
-        
         [Header("Enemy Settings")]
         [SerializeField] private Transform enemyTransform;
         [SerializeField] private Vector2Int facingDirection = Vector2Int.up;
-        [SerializeField] private EnemyState currentState = EnemyState.Stationary;
+        [SerializeField] private IEnemyBehaviour currentBehaviour;
         
         [Header("Movement Animation")]
         [SerializeField] private float moveDuration = 0.3f;
@@ -44,6 +38,10 @@ namespace Gameplay.Enemy
         
         public Vector2Int CurrentNodeId => _currentNodeId;
         public Vector2Int FacingDirection => facingDirection;
+        public Vector2Int CurrentPlayerNodeId => _currentPlayerNodeId;
+        public ITurnManager TurnManager => _turnManager;
+        public ILevelManager LevelManager => _levelManager;
+        public bool ShowDebugLogs => showDebugLogs;
         
         public override void Initialize()
         {
@@ -51,6 +49,10 @@ namespace Gameplay.Enemy
             
             _turnManager = ServiceLocator.Get<ITurnManager>();
             _levelManager = ServiceLocator.Get<ILevelManager>();
+            
+            // Set default behaviour
+            if (currentBehaviour == null)
+                currentBehaviour = new StationaryBehaviour();
             
             // Subscribe to events
             EventBus.Subscribe<PlayerMovedEvent>(OnPlayerMoved);
@@ -62,7 +64,7 @@ namespace Gameplay.Enemy
             _isInitialized = true;
             
             if (showDebugLogs)
-                Debug.Log($"[GridEnemy] Initialized at {_currentNodeId}, facing {facingDirection}, state: {currentState}");
+                Debug.Log($"[GridEnemy] Initialized at {_currentNodeId}, facing {facingDirection}, behaviour: {currentBehaviour.GetBehaviourName()}");
         }
         
         /// <summary>
@@ -124,11 +126,6 @@ namespace Gameplay.Enemy
         }
         
         /// <summary>
-        /// Animate movement to target node with delay
-        /// </summary>
-        
-        
-        /// <summary>
         /// Called when movement animation completes
         /// </summary>
         private void OnMoveComplete(Vector2Int newNodeId)
@@ -154,15 +151,15 @@ namespace Gameplay.Enemy
         }
         
         /// <summary>
-        /// Set the enemy's behavior state
+        /// Set the enemy's behaviour
         /// </summary>
-        public void SetEnemyState(EnemyState newState)
+        public void SetBehaviour(IEnemyBehaviour newBehaviour)
         {
-            var previousState = currentState;
-            currentState = newState;
+            var previousBehaviour = currentBehaviour;
+            currentBehaviour = newBehaviour;
             
             if (showDebugLogs)
-                Debug.Log($"[GridEnemy] State changed from {previousState} to {newState}");
+                Debug.Log($"[GridEnemy] Behaviour changed from {previousBehaviour?.GetBehaviourName()} to {currentBehaviour.GetBehaviourName()}");
         }
         
         private void UpdateVisualRotation()
@@ -236,7 +233,7 @@ namespace Gameplay.Enemy
         /// <summary>
         /// Check if player is in vision range (1 edge distance in facing direction)
         /// </summary>
-        private bool IsPlayerInVision(Vector2Int playerPosition)
+        public bool IsPlayerInVision(Vector2Int playerPosition)
         {
             var graph = _levelManager.GetCurrentGraph();
             
@@ -256,117 +253,17 @@ namespace Gameplay.Enemy
         }
         
         /// <summary>
-        /// Enemy moves based on current state
+        /// Enemy moves based on current behaviour
         /// </summary>
         private void PerformEnemyMovement()
         {
-            switch (currentState)
-            {
-                case EnemyState.Stationary:
-                    // Stationary enemies don't move
-                    if (showDebugLogs)
-                        Debug.Log($"[GridEnemy] Stationary - no movement");
-                    break;
-                    
-                case EnemyState.Patrol:
-                    PerformPatrolMovement();
-                    break;
-                    
-                case EnemyState.MovingTarget:
-                    PerformMovingTargetMovement();
-                    break;
-            }
-        }
-        
-        /// <summary>
-        /// Patrol movement: move in facing direction, reverse if blocked
-        /// </summary>
-        private void PerformPatrolMovement()
-        {
-            var graph = _levelManager.GetCurrentGraph();
-            var targetNode = _currentNodeId + facingDirection;
-            
-            // Check if we can move in facing direction
-            if (graph.CanMoveFromTo(_currentNodeId, targetNode))
-            {
-                // Check if player is at target node
-                if (IsPlayerAtNode(targetNode))
-                {
-                    // Player is at target node - move there and trigger game over
-                    MoveToNode(targetNode);
-                    EventBus.Publish(new GameOverEvent(_turnManager.CurrentTurn));
-                    return;
-                }
-                
-                // Move to target node
-                MoveToNode(targetNode);
-            }
-            else
-            {
-                // Cannot move in facing direction, reverse direction
-                ReverseFacingDirection();
-                
-                // Try to move in new direction
-                var newTargetNode = _currentNodeId + facingDirection;
-                if (graph.CanMoveFromTo(_currentNodeId, newTargetNode))
-                {
-                    // Check if player is at new target node
-                    if (IsPlayerAtNode(newTargetNode))
-                    {
-                        // Player is at target node - move there and trigger game over
-                        MoveToNode(newTargetNode);
-                        EventBus.Publish(new GameOverEvent(_turnManager.CurrentTurn));
-                        return;
-                    }
-                    
-                    // Move to new target node
-                    MoveToNode(newTargetNode);
-                }
-            }
-        }
-        
-        /// <summary>
-        /// MovingTarget movement: follow player if within 1 edge distance
-        /// </summary>
-        private void PerformMovingTargetMovement()
-        {
-            var graph = _levelManager.GetCurrentGraph();
-            
-            // Check if player is within 1 edge distance
-            if (IsPlayerInVision(_currentPlayerNodeId))
-            {
-                // Player is visible - calculate direction to player
-                var directionToPlayer = _currentPlayerNodeId - _currentNodeId;
-                var targetNode = _currentNodeId + directionToPlayer;
-                
-                if (graph.CanMoveFromTo(_currentNodeId, targetNode))
-                {
-                    // Check if player is at target node
-                    if (IsPlayerAtNode(targetNode))
-                    {
-                        // Player is at target node - move there and trigger game over
-                        MoveToNode(targetNode);
-                        EventBus.Publish(new GameOverEvent(_turnManager.CurrentTurn));
-                        return;
-                    }
-                    
-                    // Move towards player
-                    MoveToNode(targetNode);
-                }
-            }
-            else
-            {
-                // Player is too far (more than 1 edge) - switch to stationary
-                SetEnemyState(EnemyState.Stationary);
-                if (showDebugLogs)
-                    Debug.Log($"[GridEnemy] Player too far, switching to Stationary");
-            }
+            currentBehaviour?.PerformMovement(this);
         }
         
         /// <summary>
         /// Reverse the enemy's facing direction (180 degree turn)
         /// </summary>
-        private void ReverseFacingDirection()
+        public void ReverseFacingDirection()
         {
             facingDirection = -facingDirection;
             UpdateVisualRotation();
@@ -378,7 +275,7 @@ namespace Gameplay.Enemy
         /// <summary>
         /// Check if player is at the specified node
         /// </summary>
-        private bool IsPlayerAtNode(Vector2Int nodeId)
+        public bool IsPlayerAtNode(Vector2Int nodeId)
         {
             // Use stored player position from event
             return _currentPlayerNodeId == nodeId;
@@ -479,19 +376,21 @@ namespace Gameplay.Enemy
             Gizmos.DrawLine(worldPos, directionEnd);
             Gizmos.DrawWireSphere(directionEnd, 0.1f);
             
-            // Draw state indicator
-            Gizmos.color = GetStateColor(currentState);
-            var statePos = worldPos + Vector3.up * 0.8f;
-            Gizmos.DrawWireCube(statePos, Vector3.one * 0.2f);
+            // Draw behaviour indicator
+            Gizmos.color = GetBehaviourColor(currentBehaviour);
+            var behaviourPos = worldPos + Vector3.up * 0.8f;
+            Gizmos.DrawWireCube(behaviourPos, Vector3.one * 0.2f);
         }
         
-        private Color GetStateColor(EnemyState state)
+        private Color GetBehaviourColor(IEnemyBehaviour behaviour)
         {
-            return state switch
+            if (behaviour == null) return Color.white;
+            
+            return behaviour.GetBehaviourName() switch
             {
-                EnemyState.Stationary => Color.green,
-                EnemyState.Patrol => Color.blue,
-                EnemyState.MovingTarget => Color.magenta,
+                "Stationary" => Color.green,
+                "Patrol" => Color.blue,
+                "MovingTarget" => Color.magenta,
                 _ => Color.white
             };
         }
