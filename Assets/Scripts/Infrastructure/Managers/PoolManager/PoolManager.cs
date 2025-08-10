@@ -28,9 +28,13 @@ namespace TowerClicker.Infrastructure
         
         public async Task Initialize()
         {
+            Debug.Log("[PoolManager] Starting initialization...");
+            
             poolConfiguration = await 
                 Addressables.LoadAssetAsync<PoolConfigurationSO>("PoolConfiguration").ToUniTask(cancellationToken: destroyCancellationToken);
 
+            Debug.Log($"[PoolManager] Loaded pool configuration with {poolConfiguration.pools.Count} pools");
+            
             poolDictionary = new Dictionary<string, Queue<GameObject>>();
             
             // Create parent if needed
@@ -38,6 +42,7 @@ namespace TowerClicker.Infrastructure
             {
                 poolParent = new GameObject("ObjectPools").transform;
                 poolParent.SetParent(transform);
+                Debug.Log("[PoolManager] Created pool parent");
             }
             
             var allPools = new List<Pool>(poolConfiguration.pools);
@@ -45,6 +50,8 @@ namespace TowerClicker.Infrastructure
             // Create each pool
             foreach (Pool pool in allPools)
             {
+                Debug.Log($"[PoolManager] Creating pool for tag: {pool.tag}, size: {pool.size}");
+                
                 // Create category parent
                 GameObject categoryParent = new GameObject(pool.tag + "Pool");
                 categoryParent.transform.SetParent(poolParent);
@@ -54,6 +61,12 @@ namespace TowerClicker.Infrastructure
                 // Create and queue objects
                 for (int i = 0; i < pool.size; i++)
                 {
+                    if (pool.prefab == null)
+                    {
+                        Debug.LogError($"[PoolManager] Prefab is null for pool {pool.tag}");
+                        continue;
+                    }
+                    
                     GameObject obj = Instantiate(pool.prefab, categoryParent.transform);
                     obj.SetActive(false);
                     objectPool.Enqueue(obj);
@@ -61,7 +74,11 @@ namespace TowerClicker.Infrastructure
                 
                 // Add pool to dictionary
                 poolDictionary.Add(pool.tag, objectPool);
+                Debug.Log($"[PoolManager] Successfully created pool {pool.tag} with {objectPool.Count} objects");
             }
+            
+            Debug.Log($"[PoolManager] Initialization complete. Total pools: {poolDictionary.Count}");
+            Debug.Log($"[PoolManager] Pool keys: {string.Join(", ", poolDictionary.Keys)}");
         }
         
         public GameObject Spawn(string tag, Vector3 position, Quaternion rotation)
@@ -74,7 +91,6 @@ namespace TowerClicker.Infrastructure
             }
             
             // Try to get an object from the pool
-
             if (pool.Count == 0)
             {
                 Debug.LogWarning($"Pool with tag {tag} is empty");
@@ -104,6 +120,31 @@ namespace TowerClicker.Infrastructure
             
             // Get the next object from the pool
             GameObject obj = pool.Dequeue();
+
+            if (obj == null)
+            {
+                Debug.LogError($"Object from pool {tag} is null. Pool count: {pool.Count}, Dictionary keys: {string.Join(", ", poolDictionary.Keys)}");
+                
+                // Try to recover by creating a new object
+                GameObject prefab = null;
+                if (poolConfiguration != null)
+                {
+                    Pool configPoolMatch = poolConfiguration.pools.Find(p => p.tag == tag);
+                    if (configPoolMatch != null)
+                    {
+                        prefab = configPoolMatch.prefab;
+                    }
+                }
+                
+                if (prefab != null)
+                {
+                    Debug.LogWarning($"Creating new object for pool {tag} to recover from null object");
+                    GameObject newObj = Instantiate(prefab, position, rotation);
+                    return newObj;
+                }
+                
+                return null;
+            }
             
             // Set position and rotation
             obj.transform.position = position;

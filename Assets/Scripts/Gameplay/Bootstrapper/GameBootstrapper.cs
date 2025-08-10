@@ -77,7 +77,6 @@ namespace Gameplay.Bootstrapper
             
             // Initialize character after level is loaded (level is already loaded in levelManager.Initialize())
             characterController.Initialize();
-            ServiceLocator.Register<ICharacterController>(characterController);
             cameraFollow.Initialize();
             
             // Initialize keyboard test input component for easy testing

@@ -14,92 +14,172 @@ namespace Infrastructure.Managers.LevelManager
 {
     public class LevelManager : ILevelManager
     {
+        // Core state
         private int _currentLevel = -1;
         private GraphScriptableObject _currentLevelGraph;
+        private Graph _currentGraph;
+        
+        // Configuration
         private GridConfig _gridConfig;
-        private Transform _gridRoot; // Root object for rotation
-        private Transform _gridParent;
-        private Transform _nodesParent;
-        private Transform _edgesParent;
-        private GameObject _levelObject; // Level object reference
+        
+        // Services - initialized once
         private IPoolManager _poolManager;
         private IGameManager _gameManager;
         
+        // Grid hierarchy - single root object
+        private GameObject _gridRoot;
+        private Transform _nodesParent;
+        private Transform _edgesParent;
+        
+        // Spawned objects
         private readonly List<GameObject> _spawnedNodes = new();
         private readonly List<GameObject> _spawnedEdges = new();
         private readonly Dictionary<Vector2Int, GameObject> _nodeObjects = new();
         
-        public int CurrentLevel => _currentLevel;
-        public GraphScriptableObject CurrentLevelGraph => _currentLevelGraph;
-        
+        // Events
         public event Action<int> OnLevelChanged;
         public event Action<GraphScriptableObject> OnLevelLoaded;
         public event Action OnLevelCompleted;
         public event Action OnLevelFailed;
         public event Action<Graph> OnGridGenerated;
         public event Action<Graph> OnGridInstantiated;
-
-        private Vector3 _pivotPoint;
-        private Graph _currentGraph;
-        private bool _isRestarting = false;
+        
+        // Properties
+        public int CurrentLevel => _currentLevel;
+        public GraphScriptableObject CurrentLevelGraph => _currentLevelGraph;
+        public GridConfig GetGridConfig() => _gridConfig;
+        public Graph GetCurrentGraph() => _currentGraph;
 
         public async Task Initialize()
         {
             try
             {
-                // Load GridConfig from Addressables
+                // Load configuration
                 _gridConfig = await Addressables.LoadAssetAsync<GridConfig>("GridConfig").ToUniTask();
                 
-                // Get required services
+                // Get services once
                 _poolManager = ServiceLocator.Get<IPoolManager>();
                 _gameManager = ServiceLocator.Get<IGameManager>();
                 
-                // Subscribe to win/lose events
+                // Subscribe to events
                 EventBus.Subscribe<WinEvent>(OnPlayerWon);
                 EventBus.Subscribe<LoseEvent>(OnPlayerLost);
                 
-                // Load default level
+                // Load first level
                 LoadLevel(1);
             }
             catch (Exception ex)
             {
-                Debug.LogError($"Error loading GridConfig from Addressables: {ex.Message}");
-                _gridConfig = ScriptableObject.CreateInstance<GridConfig>();
+                Debug.LogError($"[LevelManager] Initialization failed: {ex.Message}");
+                throw;
             }
         }
-
+        
         public async void LoadLevel(int levelIndex)
         {
             if (levelIndex < 0)
             {
-                Debug.LogError($"Level index {levelIndex} cannot be negative.");
+                Debug.LogError($"[LevelManager] Invalid level index: {levelIndex}");
                 return;
             }
             
-            string levelKey = $"level_{levelIndex}";
-            
             try
             {
-                var levelGraph = await Addressables.LoadAssetAsync<GraphScriptableObject>(levelKey).ToUniTask();
-                _currentLevel = levelIndex;
-                LoadLevel(levelGraph);
+                var levelGraph = await Addressables.LoadAssetAsync<GraphScriptableObject>($"level_{levelIndex}").ToUniTask();
+                LoadLevelInternal(levelGraph, levelIndex);
             }
             catch (Exception ex)
             {
-                Debug.LogError($"Error loading level {levelIndex}: {ex.Message}");
+                Debug.LogError($"[LevelManager] Failed to load level {levelIndex}: {ex.Message}");
             }
         }
 
         public void LoadLevel(GraphScriptableObject levelGraph)
         {
+            LoadLevelInternal(levelGraph, _currentLevel);
+        }
+
+        private void LoadLevelInternal(GraphScriptableObject levelGraph, int levelIndex)
+        {
+            // Unload current level if exists (return objects to pool)
+            if (_currentLevelGraph != null)
+            {
+                UnloadLevel();
+            }
+            
+            // Clear grid hierarchy if exists
+            if (_gridRoot != null)
+            {
+                UnityEngine.Object.Destroy(_gridRoot);
+                _gridRoot = null;
+                _nodesParent = null;
+                _edgesParent = null;
+            }
+            
+            // Set new level
+            _currentLevel = levelIndex;
             _currentLevelGraph = levelGraph;
             
-            // Generate the grid
-            GenerateGrid();
+            // Generate new level
+            GenerateLevel();
             
-            // Trigger events
+            // Notify
             OnLevelChanged?.Invoke(_currentLevel);
             OnLevelLoaded?.Invoke(_currentLevelGraph);
+        }
+
+        public void RestartLevel()
+        {
+            if (_currentLevelGraph == null)
+            {
+                Debug.LogWarning("[LevelManager] No level to restart");
+                return;
+            }
+            
+            Debug.Log($"[LevelManager] Restarting level {_currentLevel}");
+            
+            // First unload current level (return objects to pool)
+            UnloadLevel();
+            
+            // Clear grid hierarchy
+            if (_gridRoot != null)
+            {
+                UnityEngine.Object.Destroy(_gridRoot);
+                _gridRoot = null;
+                _nodesParent = null;
+                _edgesParent = null;
+            }
+            
+            // Wait one frame to ensure all objects are properly destroyed
+            // This prevents the MissingReferenceException from destroyed GameObjects
+            RestartLevelAsync().Forget();
+        }
+        
+        private async UniTaskVoid RestartLevelAsync()
+        {
+            // Wait for next frame to ensure all objects are destroyed
+            await UniTask.NextFrame();
+            
+            // Now regenerate the level
+            GenerateLevel();
+            
+            // Reset game state
+            _gameManager.ResumeGame();
+            
+            // Reset turn manager
+            ServiceLocator.Get<ITurnManager>()?.ResetForNewLevel();
+            
+            // Notify restart
+            OnLevelLoaded?.Invoke(_currentLevelGraph);
+            
+            // Handle enemies
+            ServiceLocator.Get<IGridEnemyManager>()?.OnLevelRestart();
+        }
+
+        public void NextLevel()
+        {
+            if (_currentLevel < 0) return;
+            LoadLevel(_currentLevel + 1);
         }
 
         public void CompleteLevel()
@@ -111,197 +191,78 @@ namespace Infrastructure.Managers.LevelManager
         {
             OnLevelFailed?.Invoke();
         }
-        
+
         private void OnPlayerWon(WinEvent winEvent)
         {
             Debug.Log($"[LevelManager] Player won level {_currentLevel} at turn {winEvent.TurnNumber}");
             CompleteLevel();
-            _gameManager?.WinGame();
+            _gameManager.WinGame();
         }
         
         private void OnPlayerLost(LoseEvent loseEvent)
         {
             Debug.Log($"[LevelManager] Player lost level {_currentLevel} at turn {loseEvent.TurnNumber}, reason: {loseEvent.Reason}");
             FailLevel();
-            _gameManager?.LoseGame();
+            _gameManager.LoseGame();
         }
 
-        public void RestartLevel()
+        private void GenerateLevel()
         {
-            Debug.Log($"[LevelManager] Restarting level {_currentLevel}");
+            if (_currentLevelGraph == null) return;
             
-            // Set restart flag to prevent double spawning
-            _isRestarting = true;
+            // Create grid hierarchy
+            CreateGridHierarchy();
             
-            // Clear current grid first
-            ClearGrid();
-            
-            // Reset game state to playing
-            if (_gameManager != null)
-            {
-                _gameManager.State = GameState.Game;
-            }
-            
-            // Reset turn manager
-            var turnManager = ServiceLocator.Get<ITurnManager>();
-            if (turnManager != null)
-            {
-                turnManager.ResetForNewLevel();
-            }
-            
-            // Regenerate the grid
-            GenerateGrid();
-            
-            // Notify that level is restarted
-            OnLevelLoaded?.Invoke(_currentLevelGraph);
-            
-            // Ensure enemies are respawned from original level data
-            // This should happen after the grid is generated but before OnGridInstantiated
-            var gridEnemyManager = ServiceLocator.Get<IGridEnemyManager>();
-            if (gridEnemyManager != null)
-            {
-                gridEnemyManager.OnLevelRestart();
-            }
-            
-            // Reset character to start position
-            var characterController = ServiceLocator.Get<ICharacterController>();
-            if (characterController != null)
-            {
-                characterController.ResetToStartPosition();
-                Debug.Log("[LevelManager] Character reset to start position during restart");
-            }
-            
-            // Reset restart flag
-            _isRestarting = false;
-        }
-
-        public void NextLevel()
-        {
-            LoadLevel(_currentLevel + 1);
-        }
-
-        private void ApplyVerticalOffsetToLevel(GameObject levelObject)
-        {
-            float screenHeight = Camera.main.orthographicSize * 2f;
-            float offset = (screenHeight * _gridConfig.verticalOffsetPercentage) + _gridConfig.additionalVerticalOffset;
-            
-            levelObject.transform.localPosition = new Vector3(0, 0, offset);
-        }
-
-        private void InitializeGridSystem()
-        {
-            _poolManager = ServiceLocator.Get<IPoolManager>();
-            _gameManager = ServiceLocator.Get<IGameManager>();
-            
-            // Create root object for rotation
-            var rootObject = new GameObject("GridRoot");
-            _gridRoot = rootObject.transform;
-            
-            // Create Level object as child of GridRoot
-            _levelObject = new GameObject("Level");
-            _levelObject.transform.SetParent(_gridRoot);
-            
-            // Create grid parent
-            var gridObject = new GameObject("LevelGrid");
-            _gridParent = gridObject.transform;
-            _gridParent.SetParent(_levelObject.transform);
-            
-            // Create nodes parent
-            var nodesObject = new GameObject("Nodes");
-            nodesObject.transform.SetParent(_gridParent);
-            _nodesParent = nodesObject.transform;
-            
-            // Create edges parent
-            var edgesObject = new GameObject("Edges");
-            edgesObject.transform.SetParent(_gridParent);
-            _edgesParent = edgesObject.transform;
-        }
-
-        private async void GenerateGrid()
-        {
-            // Initialize grid system first
-            InitializeGridSystem();
-            
-            // Clear existing grid
-            ClearGrid();
-
+            // Generate graph
             _currentGraph = _currentLevelGraph.CreateGraph();
             
-            // Calculate bounding box center as pivot point for node positioning
-            _pivotPoint = CalculateBoundingBoxCenter();
+            // Generate content
+            GenerateNodes();
+            GenerateEdges();
             
-            // LevelGrid stays at (0,0,0) - no offset needed
-            _gridParent.localPosition = Vector3.zero;
+            // Apply positioning
+            PositionGrid();
             
-            // Generate nodes
-            GenerateNodes(_currentGraph);
-            
-            // Generate edges
-            GenerateEdges(_currentGraph);
-            
-            // Grid rotation removed - no rotation applied
-            
-            // Apply vertical offset to Level object after all content is generated
-            ApplyVerticalOffsetToLevel(_levelObject);
-            
-            // Notify that grid is generated (backward compatibility)
+            // Notify
             OnGridGenerated?.Invoke(_currentGraph);
-            
-            // Wait for next frame to ensure all GameObjects and transforms are properly updated
-            await UniTask.NextFrame();
-            
-            // Notify that grid is fully instantiated and ready for use
-            // Only trigger this event if we're not restarting (to prevent double spawning)
-            if (!_isRestarting)
-            {
-                OnGridInstantiated?.Invoke(_currentGraph);
-            }
+            OnGridInstantiated?.Invoke(_currentGraph);
         }
 
-        private Vector3 CalculateBoundingBoxCenter()
+        private void CreateGridHierarchy()
         {
-            var nodes = _currentLevelGraph.graphData.nodes;
+            // Single root object
+            _gridRoot = new GameObject("Level");
             
-            if (nodes.Count == 0)
-                return Vector3.zero;
+            // Create parent transforms
+            _nodesParent = new GameObject("Nodes").transform;
+            _edgesParent = new GameObject("Edges").transform;
             
-            // Find bounding box
-            int minX = nodes[0].id.x, maxX = nodes[0].id.x;
-            int minY = nodes[0].id.y, maxY = nodes[0].id.y;
+            // Setup hierarchy
+            _nodesParent.SetParent(_gridRoot.transform);
+            _edgesParent.SetParent(_gridRoot.transform);
             
-            foreach (var node in nodes)
-            {
-                if (node.id.x < minX) minX = node.id.x;
-                if (node.id.x > maxX) maxX = node.id.x;
-                if (node.id.y < minY) minY = node.id.y;
-                if (node.id.y > maxY) maxY = node.id.y;
-            }
-            
-            // Calculate center in grid coordinates
-            Vector2Int gridCenter = new Vector2Int((minX + maxX) / 2, (minY + maxY) / 2);
-            
-            // Convert to world position
-            Vector3 worldCenter = new Vector3(
-                gridCenter.x * _gridConfig.gridSpacing,
-                _gridConfig.nodeYPosition,
-                gridCenter.y * _gridConfig.gridSpacing
-            );
-            
-            return worldCenter;
+            Debug.Log("[LevelManager] Grid hierarchy created successfully");
         }
 
-        private void GenerateNodes(Graph graph)
+        private void GenerateNodes()
         {
+            if (_currentLevelGraph?.graphData?.nodes == null) return;
+            
             foreach (var nodeData in _currentLevelGraph.graphData.nodes)
             {
-                var worldPos = GetNodeWorldPosition(nodeData.id);
+                var worldPos = CalculateNodePosition(nodeData.id);
                 var poolKey = GetNodePoolKey(nodeData.type);
-                var nodeObj = _poolManager.Spawn(poolKey, _nodesParent, worldPos, Quaternion.identity);
                 
-                // Name the node based on its type and ID
+                var nodeObj = _poolManager.Spawn(poolKey, _nodesParent, worldPos, Quaternion.identity);
+                if (nodeObj == null)
+                {
+                    Debug.LogError($"[LevelManager] Failed to spawn node of type {nodeData.type} from pool {poolKey}");
+                    continue;
+                }
+                
                 nodeObj.name = $"{nodeData.type}Node_({nodeData.id.x},{nodeData.id.y})";
                 
-                // Add NodeGizmo component to display node ID
+                // Add gizmo
                 var nodeGizmo = nodeObj.AddComponent<Gameplay.Graph.NodeGizmo>();
                 nodeGizmo.Initialize(nodeData.id, nodeData.type);
                 
@@ -310,13 +271,15 @@ namespace Infrastructure.Managers.LevelManager
             }
         }
 
-        private void GenerateEdges(Graph graph)
+        private void GenerateEdges()
         {
+            if (_currentLevelGraph?.graphData?.edges == null) return;
+            
             foreach (var edgeData in _currentLevelGraph.graphData.edges)
             {
-                var fromPos = GetNodeWorldPosition(edgeData.fromId);
-                var toPos = GetNodeWorldPosition(edgeData.toId);
-                var centerPos = (fromPos + toPos) / 2f;
+                var fromPos = CalculateNodePosition(edgeData.fromId);
+                var toPos = CalculateNodePosition(edgeData.toId);
+                var centerPos = (fromPos + toPos) * 0.5f;
                 centerPos.y += _gridConfig.edgeYOffset;
 
                 var direction = (toPos - fromPos).normalized;
@@ -325,116 +288,194 @@ namespace Infrastructure.Managers.LevelManager
                 var poolKey = GetEdgePoolKey(edgeData.type);
                 var edgeObj = _poolManager.Spawn(poolKey, _edgesParent, centerPos, rotation);
                 
-                // Name the edge based on its type and connection IDs
+                if (edgeObj == null)
+                {
+                    Debug.LogError($"[LevelManager] Failed to spawn edge of type {edgeData.type} from pool {poolKey}");
+                    continue;
+                }
+                
                 edgeObj.name = $"{edgeData.type}Edge_({edgeData.fromId.x},{edgeData.fromId.y})_to_({edgeData.toId.x},{edgeData.toId.y})";
                 
-                // Scale edge to match distance
+                // Scale edge
                 var distance = Vector3.Distance(fromPos, toPos);
                 edgeObj.transform.localScale = new Vector3(_gridConfig.edgeWidth, _gridConfig.edgeWidth, distance);
+                
                 _spawnedEdges.Add(edgeObj);
+            }
+        }
+
+        private Vector3 CalculateNodePosition(Vector2Int nodeId)
+        {
+            var gridPos = new Vector3(
+                nodeId.x * _gridConfig.gridSpacing,
+                _gridConfig.nodeYPosition,
+                nodeId.y * _gridConfig.gridSpacing
+            );
+            
+            // Center the grid
+            var gridCenter = CalculateGridCenter();
+            return gridPos - gridCenter;
+        }
+
+        private Vector3 CalculateGridCenter()
+        {
+            if (_currentLevelGraph?.graphData?.nodes == null || _currentLevelGraph.graphData.nodes.Count == 0)
+                return Vector3.zero;
+            
+            var nodes = _currentLevelGraph.graphData.nodes;
+            
+            // Find bounds
+            int minX = nodes[0].id.x, maxX = nodes[0].id.x;
+            int minY = nodes[0].id.y, maxY = nodes[0].id.y;
+            
+            foreach (var node in nodes)
+            {
+                minX = Mathf.Min(minX, node.id.x);
+                maxX = Mathf.Max(maxX, node.id.x);
+                minY = Mathf.Min(minY, node.id.y);
+                maxY = Mathf.Max(maxY, node.id.y);
+            }
+            
+            // Calculate center
+            var gridCenter = new Vector2Int((minX + maxX) / 2, (minY + maxY) / 2);
+            return new Vector3(
+                gridCenter.x * _gridConfig.gridSpacing,
+                _gridConfig.nodeYPosition,
+                gridCenter.y * _gridConfig.gridSpacing
+            );
+        }
+
+        private void PositionGrid()
+        {
+            if (_gridRoot == null) return;
+            
+            // Apply vertical offset
+            var screenHeight = Camera.main.orthographicSize * 2f;
+            var offset = (screenHeight * _gridConfig.verticalOffsetPercentage) + _gridConfig.additionalVerticalOffset;
+            _gridRoot.transform.localPosition = new Vector3(0, 0, offset);
+        }
+
+        public void UnloadLevel()
+        {
+            Debug.Log("[LevelManager] Unloading current level");
+            
+            // Return all spawned objects to pool
+            ReturnObjectsToPool();
+            
+            // Clear references
+            _spawnedNodes.Clear();
+            _spawnedEdges.Clear();
+            _nodeObjects.Clear();
+            
+            // Clear graph reference
+            _currentGraph = null;
+        }
+        
+        private void ReturnObjectsToPool()
+        {
+            // Return nodes to pool
+            foreach (var node in _spawnedNodes)
+            {
+                if (node != null)
+                {
+                    TryDespawnNode(node);
+                }
+            }
+            
+            // Return edges to pool
+            foreach (var edge in _spawnedEdges)
+            {
+                if (edge != null)
+                {
+                    TryDespawnEdge(edge);
+                }
+            }
+        }
+
+        private void ClearLevel()
+        {
+            // First return objects to pool (proper cleanup)
+            ReturnObjectsToPool();
+            
+            // Clear references
+            _spawnedNodes.Clear();
+            _spawnedEdges.Clear();
+            _nodeObjects.Clear();
+            
+            // Destroy grid hierarchy
+            if (_gridRoot != null)
+            {
+                UnityEngine.Object.Destroy(_gridRoot);
+                _gridRoot = null;
+                _nodesParent = null;
+                _edgesParent = null;
+            }
+            
+            // Clear references
+            _currentGraph = null;
+        }
+
+        private void ClearSpawnedObjects()
+        {
+            // This method is now simplified since ReturnObjectsToPool handles the work
+            // Just clear the lists
+            _spawnedNodes.Clear();
+            _spawnedEdges.Clear();
+            _nodeObjects.Clear();
+        }
+
+        private void TryDespawnNode(GameObject node)
+        {
+            if (node == null) return;
+            
+            // Try to despawn with different types
+            var despawned = _poolManager.Despawn(PoolKeys.BaseNode, node) ||
+                           _poolManager.Despawn(PoolKeys.StartNode, node) ||
+                           _poolManager.Despawn(PoolKeys.GoalNode, node) ||
+                           _poolManager.Despawn(PoolKeys.BreakableNode, node) ||
+                           _poolManager.Despawn(PoolKeys.RedirectorNode, node) ||
+                           _poolManager.Despawn(PoolKeys.TrapNode, node) ||
+                           _poolManager.Despawn(PoolKeys.Enemy, node);
+            
+            if (!despawned)
+            {
+                Debug.LogWarning($"[LevelManager] Failed to despawn node {node.name}, destroying instead");
+                UnityEngine.Object.DestroyImmediate(node);
+            }
+        }
+
+        private void TryDespawnEdge(GameObject edge)
+        {
+            if (edge == null) return;
+            
+            var despawned = _poolManager.Despawn(PoolKeys.BaseEdge, edge) ||
+                           _poolManager.Despawn(PoolKeys.DirectedEdge, edge) ||
+                           _poolManager.Despawn(PoolKeys.SlipperyEdge, edge) ||
+                           _poolManager.Despawn(PoolKeys.BreakableEdge, edge);
+            
+            if (!despawned)
+            {
+                Debug.LogWarning($"[LevelManager] Failed to despawn edge {edge.name}, destroying instead");
+                UnityEngine.Object.DestroyImmediate(edge);
             }
         }
 
         public Vector3 GetNodeWorldPosition(Vector2Int nodeId)
         {
-            // Node position relative to pivot point
-            var position = new Vector3(
-                nodeId.x * _gridConfig.gridSpacing,
-                _gridConfig.nodeYPosition,
-                nodeId.y * _gridConfig.gridSpacing
-            ) - _pivotPoint; // Subtract pivot to center the grid
-            
-            return position;
+            return CalculateNodePosition(nodeId);
         }
 
         public Vector3 GetNodeActualWorldPosition(Vector2Int nodeId)
         {
-            if (_nodeObjects.TryGetValue(nodeId, out var nodeObj))
-            {
-                return nodeObj.transform.position;
-            }
-            
-            // Fallback to calculated position
-            return GetNodeWorldPosition(nodeId);
+            return _nodeObjects.TryGetValue(nodeId, out var nodeObj) 
+                ? nodeObj.transform.position 
+                : CalculateNodePosition(nodeId);
         }
 
         public bool TryMoveToNode(Vector2Int currentNodeId, Vector2Int direction, out Vector2Int targetNodeId)
         {
             targetNodeId = currentNodeId + direction;
-            
-            if (_currentGraph == null)
-            {
-                return false;
-            }
-            
-            // O(1) operation using linked list approach!
-            // Check if we can move in the specified direction from current node
-            return _currentGraph.CanMoveFromTo(currentNodeId, targetNodeId);
-        }
-        
-        private void ClearGrid()
-        {
-            // Reset root rotation and grid parent position before clearing
-            _gridRoot.rotation = Quaternion.identity;
-            _gridParent.localPosition = Vector3.zero;
-            
-            // Despawn all nodes - we don't track their types, so try all possible node types
-            foreach (var node in _spawnedNodes)
-            {
-                // Try to despawn with different node types until successful
-                bool despawned = _poolManager.Despawn(PoolKeys.BaseNode, node) ||
-                               _poolManager.Despawn(PoolKeys.StartNode, node) ||
-                               _poolManager.Despawn(PoolKeys.GoalNode, node) ||
-                               _poolManager.Despawn(PoolKeys.BreakableNode, node) ||
-                               _poolManager.Despawn(PoolKeys.RedirectorNode, node) ||
-                               _poolManager.Despawn(PoolKeys.TrapNode, node) ||
-                               _poolManager.Despawn(PoolKeys.Enemy, node);
-                
-                if (!despawned)
-                    UnityEngine.Object.Destroy(node);
-            }
-            _spawnedNodes.Clear();
-            _nodeObjects.Clear();
-
-            // Despawn all edges
-            foreach (var edge in _spawnedEdges)
-            {
-                bool despawned = _poolManager.Despawn(PoolKeys.BaseEdge, edge) ||
-                               _poolManager.Despawn(PoolKeys.DirectedEdge, edge) ||
-                               _poolManager.Despawn(PoolKeys.SlipperyEdge, edge) ||
-                               _poolManager.Despawn(PoolKeys.BreakableEdge, edge);
-                
-                if (!despawned)
-                    UnityEngine.Object.Destroy(edge);
-            }
-            _spawnedEdges.Clear();
-        }
-
-        private string GetNodePoolKey(NodeType nodeType)
-        {
-            return nodeType switch
-            {
-                NodeType.Normal => PoolKeys.BaseNode,
-                NodeType.Start => PoolKeys.StartNode,
-                NodeType.Goal => PoolKeys.GoalNode,
-                NodeType.Breakable => PoolKeys.BreakableNode,
-                NodeType.Redirector => PoolKeys.RedirectorNode,
-                NodeType.Trap => PoolKeys.TrapNode,
-                NodeType.Enemy => PoolKeys.BaseNode, // Enemy nodes use normal node prefab
-                _ => PoolKeys.BaseNode
-            };
-        }
-
-        private string GetEdgePoolKey(EdgeType edgeType)
-        {
-            return edgeType switch
-            {
-                EdgeType.Standard => PoolKeys.BaseEdge,
-                EdgeType.Directed => PoolKeys.DirectedEdge,
-                EdgeType.Slippery => PoolKeys.SlipperyEdge,
-                EdgeType.Breakable => PoolKeys.BreakableEdge,
-                _ => PoolKeys.BaseEdge
-            };
+            return _currentGraph?.CanMoveFromTo(currentNodeId, targetNodeId) ?? false;
         }
 
         public void SetGridConfig(GridConfig config)
@@ -442,38 +483,53 @@ namespace Infrastructure.Managers.LevelManager
             _gridConfig = config;
         }
 
-
-
-        public GridConfig GetGridConfig()
+        public void ResetLevelProgress()
         {
-            return _gridConfig;
+            _currentLevel = -1;
+            
+            // Unload current level if exists
+            if (_currentLevelGraph != null)
+            {
+                UnloadLevel();
+            }
+            
+            // Clear grid hierarchy if exists
+            if (_gridRoot != null)
+            {
+                UnityEngine.Object.Destroy(_gridRoot);
+                _gridRoot = null;
+                _nodesParent = null;
+                _edgesParent = null;
+            }
+            
+            _currentLevelGraph = null;
         }
-        
-        public Graph GetCurrentGraph()
-        {
-            return _currentGraph;
-        }
-        
+
         private void OnDestroy()
         {
-            // Unsubscribe from events
             EventBus.Unsubscribe<WinEvent>(OnPlayerWon);
             EventBus.Unsubscribe<LoseEvent>(OnPlayerLost);
         }
 
-        public void ResetLevelProgress()
+        private string GetNodePoolKey(NodeType nodeType) => nodeType switch
         {
-            _currentLevel = -1;
-            ClearGrid();
-            _currentLevelGraph = null;
-            
-            // Reset all grid references
-            UnityEngine.Object.Destroy(_gridRoot.gameObject);
-            _gridRoot = null;
-            _gridParent = null;
-            _nodesParent = null;
-            _edgesParent = null;
-            _levelObject = null;
-        }
+            NodeType.Normal => PoolKeys.BaseNode,
+            NodeType.Start => PoolKeys.StartNode,
+            NodeType.Goal => PoolKeys.GoalNode,
+            NodeType.Breakable => PoolKeys.BreakableNode,
+            NodeType.Redirector => PoolKeys.RedirectorNode,
+            NodeType.Trap => PoolKeys.TrapNode,
+            NodeType.Enemy => PoolKeys.BaseNode,
+            _ => PoolKeys.BaseNode
+        };
+
+        private string GetEdgePoolKey(EdgeType edgeType) => edgeType switch
+        {
+            EdgeType.Standard => PoolKeys.BaseEdge,
+            EdgeType.Directed => PoolKeys.DirectedEdge,
+            EdgeType.Slippery => PoolKeys.SlipperyEdge,
+            EdgeType.Breakable => PoolKeys.BreakableEdge,
+            _ => PoolKeys.BaseEdge
+        };
     }
 } 

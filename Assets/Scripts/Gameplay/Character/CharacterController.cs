@@ -10,7 +10,7 @@ using DG.Tweening;
 
 namespace Gameplay.Character
 {
-    public class CharacterController : BaseEntity, ICharacterController
+    public class CharacterController : BaseEntity
     {
         [Header("Components")]
         [SerializeField] private Transform characterTransform;
