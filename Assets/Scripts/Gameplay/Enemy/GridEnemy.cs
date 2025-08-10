@@ -2,9 +2,10 @@ using UnityEngine;
 using Gameplay.Graph;
 using Gameplay.Events;
 using Infrastructure.Managers.LevelManager;
+using Infrastructure;
+using DG.Tweening;
 using Infrastructure.Managers;
 using TowerClicker.Infrastructure;
-using Infrastructure;
 
 namespace Gameplay.Enemy
 {
@@ -13,9 +14,22 @@ namespace Gameplay.Enemy
     /// </summary>
     public class GridEnemy : BaseEntity, IPoolable
     {
+        public enum EnemyState
+        {
+            Stationary,      // Sabit duran, sadece vision detection
+            Patrol,          // Git-gel yapan
+            MovingTarget     // Player'ı takip eden
+        }
+        
         [Header("Enemy Settings")]
         [SerializeField] private Transform enemyTransform;
         [SerializeField] private Vector2Int facingDirection = Vector2Int.up;
+        [SerializeField] private EnemyState currentState = EnemyState.Stationary;
+        
+        [Header("Movement Animation")]
+        [SerializeField] private float moveDuration = 0.3f;
+        [SerializeField] private float moveDelay = 0.5f;
+        [SerializeField] private Ease moveEase = Ease.OutQuad;
         
         [Header("Debug")]
         [SerializeField] private bool showDebugLogs = true;
@@ -25,6 +39,8 @@ namespace Gameplay.Enemy
         private ILevelManager _levelManager;
         private bool _isInitialized = false;
         private Vector2Int _currentPlayerNodeId; // Track player position
+        private bool _isMoving = false;
+        private Tween _currentMoveTween;
         
         public Vector2Int CurrentNodeId => _currentNodeId;
         public Vector2Int FacingDirection => facingDirection;
@@ -36,22 +52,17 @@ namespace Gameplay.Enemy
             _turnManager = ServiceLocator.Get<ITurnManager>();
             _levelManager = ServiceLocator.Get<ILevelManager>();
             
-            // Get initial player position from start node
-            var graph = _levelManager.GetCurrentGraph();
-            var startNode = graph.GetStartNode();
-            if (startNode != null)
-            {
-                _currentPlayerNodeId = startNode.Id;
-            }
-            
-            // Subscribe to turn events
-            EventBus.Subscribe<TurnStartedEvent>(OnTurnStarted);
+            // Subscribe to events
             EventBus.Subscribe<PlayerMovedEvent>(OnPlayerMoved);
+            
+            // Get start node position
+            var startNode = _levelManager.GetCurrentGraph().GetStartNode();
+            _currentPlayerNodeId = startNode.Id;
             
             _isInitialized = true;
             
             if (showDebugLogs)
-                Debug.Log($"[GridEnemy] Initialized at node {_currentNodeId}, facing {facingDirection}, player at {_currentPlayerNodeId}");
+                Debug.Log($"[GridEnemy] Initialized at {_currentNodeId}, facing {facingDirection}, state: {currentState}");
         }
         
         /// <summary>
@@ -61,29 +72,73 @@ namespace Gameplay.Enemy
         {
             _currentNodeId = nodeId;
             
-            var worldPos = _levelManager.GetNodeActualWorldPosition(_currentNodeId);
+            // Update visual position
+            var worldPos = _levelManager.GetNodeActualWorldPosition(nodeId);
             enemyTransform.position = worldPos;
             
             if (showDebugLogs)
-                Debug.Log($"[GridEnemy] Positioned at node {_currentNodeId}");
+                Debug.Log($"[GridEnemy] Position set to {nodeId} (world: {worldPos})");
         }
         
         /// <summary>
-        /// Move enemy to a new position (for future movement implementation)
+        /// Move enemy to a new node with animation
         /// </summary>
         public void MoveToNode(Vector2Int newNodeId)
         {
+            if (_isMoving) 
+            {
+                if (showDebugLogs)
+                    Debug.Log($"[GridEnemy] Already moving, ignoring move request to {newNodeId}");
+                return;
+            }
+
             var previousNodeId = _currentNodeId;
             
-            // Update position
-            SetPosition(newNodeId);
+            // Kill previous tween if it exists
+            if (_currentMoveTween != null && _currentMoveTween.IsActive())
+            {
+                _currentMoveTween.Kill();
+            }
+
+            // Calculate movement direction for rotation
+            var moveDirection = newNodeId - previousNodeId;
             
-            // Update graph: previous node becomes normal, new node occupied by enemy
-            var graph = _levelManager.GetCurrentGraph();
-            // Note: We don't set new node to Enemy type since that's for spawn points only
+            // Get target world position
+            var targetPos = _levelManager.GetNodeActualWorldPosition(newNodeId);
+            var targetRotation = GetRotationFromDirection(moveDirection);
+            
+            _isMoving = true;
+            
+            // Create delay tween first, then animate movement
+            _currentMoveTween = DOVirtual.DelayedCall(moveDelay, () => {
+                // Check if still moving (not interrupted)
+                if (!_isMoving) return;
+                
+                // Animate movement and rotation
+                DOTween.Sequence()
+                    .Insert(0f, enemyTransform.DORotate(targetRotation, moveDuration * 0.5f).SetEase(moveEase))
+                    .Insert(0f, enemyTransform.DOMove(targetPos, moveDuration).SetEase(moveEase))
+                    .OnComplete(() => OnMoveComplete(newNodeId))
+                    .SetAutoKill(true);
+            }).SetAutoKill(true);
+        }
+        
+        /// <summary>
+        /// Animate movement to target node with delay
+        /// </summary>
+        
+        
+        /// <summary>
+        /// Called when movement animation completes
+        /// </summary>
+        private void OnMoveComplete(Vector2Int newNodeId)
+        {
+            _isMoving = false;
+            _currentMoveTween = null; // Clear tween reference
+            _currentNodeId = newNodeId; // Update current node ID after animation
             
             if (showDebugLogs)
-                Debug.Log($"[GridEnemy] Moved from {previousNodeId} to {newNodeId}");
+                Debug.Log($"[GridEnemy] Movement completed to {newNodeId}");
         }
         
         /// <summary>
@@ -96,6 +151,18 @@ namespace Gameplay.Enemy
             
             if (showDebugLogs)
                 Debug.Log($"[GridEnemy] Now facing {facingDirection}");
+        }
+        
+        /// <summary>
+        /// Set the enemy's behavior state
+        /// </summary>
+        public void SetEnemyState(EnemyState newState)
+        {
+            var previousState = currentState;
+            currentState = newState;
+            
+            if (showDebugLogs)
+                Debug.Log($"[GridEnemy] State changed from {previousState} to {newState}");
         }
         
         private void UpdateVisualRotation()
@@ -161,21 +228,19 @@ namespace Gameplay.Enemy
             if (IsPlayerInVision(playerNodeId))
             {
                 Debug.Log($"[GridEnemy] Player spotted at {playerNodeId} - Game Over!");
-                // Trigger game over event
                 EventBus.Publish(new GameOverEvent(_turnManager.CurrentTurn));
+                return;
             }
         }
         
         /// <summary>
-        /// Check if player position is within enemy's vision (1 depth, facing direction)
-        /// Only sees along valid edges, not through walls
+        /// Check if player is in vision range (1 edge distance in facing direction)
         /// </summary>
         private bool IsPlayerInVision(Vector2Int playerPosition)
         {
-            // Get current graph to check valid connections
             var graph = _levelManager.GetCurrentGraph();
             
-            // Calculate the node we're looking at (1 depth in facing direction)
+            // Calculate the node we're looking at (1 step in facing direction)
             var visionNode = _currentNodeId + facingDirection;
             
             // Player is in vision if:
@@ -191,9 +256,32 @@ namespace Gameplay.Enemy
         }
         
         /// <summary>
-        /// Enemy moves in facing direction, or reverses direction if blocked
+        /// Enemy moves based on current state
         /// </summary>
         private void PerformEnemyMovement()
+        {
+            switch (currentState)
+            {
+                case EnemyState.Stationary:
+                    // Stationary enemies don't move
+                    if (showDebugLogs)
+                        Debug.Log($"[GridEnemy] Stationary - no movement");
+                    break;
+                    
+                case EnemyState.Patrol:
+                    PerformPatrolMovement();
+                    break;
+                    
+                case EnemyState.MovingTarget:
+                    PerformMovingTargetMovement();
+                    break;
+            }
+        }
+        
+        /// <summary>
+        /// Patrol movement: move in facing direction, reverse if blocked
+        /// </summary>
+        private void PerformPatrolMovement()
         {
             var graph = _levelManager.GetCurrentGraph();
             var targetNode = _currentNodeId + facingDirection;
@@ -238,6 +326,44 @@ namespace Gameplay.Enemy
         }
         
         /// <summary>
+        /// MovingTarget movement: follow player if within 1 edge distance
+        /// </summary>
+        private void PerformMovingTargetMovement()
+        {
+            var graph = _levelManager.GetCurrentGraph();
+            
+            // Check if player is within 1 edge distance
+            if (IsPlayerInVision(_currentPlayerNodeId))
+            {
+                // Player is visible - calculate direction to player
+                var directionToPlayer = _currentPlayerNodeId - _currentNodeId;
+                var targetNode = _currentNodeId + directionToPlayer;
+                
+                if (graph.CanMoveFromTo(_currentNodeId, targetNode))
+                {
+                    // Check if player is at target node
+                    if (IsPlayerAtNode(targetNode))
+                    {
+                        // Player is at target node - move there and trigger game over
+                        MoveToNode(targetNode);
+                        EventBus.Publish(new GameOverEvent(_turnManager.CurrentTurn));
+                        return;
+                    }
+                    
+                    // Move towards player
+                    MoveToNode(targetNode);
+                }
+            }
+            else
+            {
+                // Player is too far (more than 1 edge) - switch to stationary
+                SetEnemyState(EnemyState.Stationary);
+                if (showDebugLogs)
+                    Debug.Log($"[GridEnemy] Player too far, switching to Stationary");
+            }
+        }
+        
+        /// <summary>
         /// Reverse the enemy's facing direction (180 degree turn)
         /// </summary>
         private void ReverseFacingDirection()
@@ -273,69 +399,103 @@ namespace Gameplay.Enemy
         
         private void OnDestroy()
         {
+            // Kill any active tweens
+            if (_currentMoveTween != null && _currentMoveTween.IsActive())
+            {
+                _currentMoveTween.Kill();
+                _currentMoveTween = null;
+            }
+            
+            _isMoving = false;
+            
             // Unsubscribe from events
-            EventBus.Unsubscribe<TurnStartedEvent>(OnTurnStarted);
             EventBus.Unsubscribe<PlayerMovedEvent>(OnPlayerMoved);
+            EventBus.Unsubscribe<TurnStartedEvent>(OnTurnStarted);
         }
         
         #region IPoolable Implementation
         
         public void OnSpawnFromPool()
         {
-            // Reset enemy state when spawned from pool
-            _isInitialized = false;
-            _currentPlayerNodeId = Vector2Int.zero; // Reset player position
-            
             if (showDebugLogs)
-                Debug.Log($"[GridEnemy] Spawned from pool");
+                Debug.Log($"[GridEnemy] Spawned from pool at {_currentNodeId}");
+            
+            // Reset tween state
+            if (_currentMoveTween != null && _currentMoveTween.IsActive())
+            {
+                _currentMoveTween.Kill();
+                _currentMoveTween = null;
+            }
+            
+            _isMoving = false;
+            _currentPlayerNodeId = Vector2Int.zero;
+            
+            // Initialize if not already done
+            if (!_isInitialized)
+            {
+                Initialize();
+            }
         }
         
         public void OnDespawn()
         {
-            // Clean up when returning to pool
-            _isInitialized = false;
-            _currentPlayerNodeId = Vector2Int.zero; // Reset player position
-            
-            // Unsubscribe from events to prevent memory leaks
-            EventBus.Unsubscribe<TurnStartedEvent>(OnTurnStarted);
-            EventBus.Unsubscribe<PlayerMovedEvent>(OnPlayerMoved);
-            
             if (showDebugLogs)
-                Debug.Log($"[GridEnemy] Returning to pool");
+                Debug.Log($"[GridEnemy] Despawned from pool");
+            
+            // Kill any active tweens
+            if (_currentMoveTween != null && _currentMoveTween.IsActive())
+            {
+                _currentMoveTween.Kill();
+                _currentMoveTween = null;
+            }
+            
+            _isMoving = false;
+            _currentPlayerNodeId = Vector2Int.zero;
+            
+            // Unsubscribe from events
+            EventBus.Unsubscribe<PlayerMovedEvent>(OnPlayerMoved);
+            EventBus.Unsubscribe<TurnStartedEvent>(OnTurnStarted);
+            
+            _isInitialized = false;
         }
         
         #endregion
         
-        // Debug visualization
+        #region Gizmos
+        
         private void OnDrawGizmos()
         {
-            if (!Application.isPlaying || !_isInitialized) return;
+            if (!_isInitialized) return;
+            
+            var worldPos = _levelManager?.GetNodeActualWorldPosition(_currentNodeId) ?? Vector3.zero;
             
             // Draw enemy position
-            var worldPos = _levelManager.GetNodeActualWorldPosition(_currentNodeId);
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(worldPos, 0.3f);
             
             // Draw facing direction
-            Gizmos.color = Color.yellow;
-            var facingWorldPos = worldPos + new Vector3(facingDirection.x, 0, -facingDirection.y) * 0.5f;
-            Gizmos.DrawLine(worldPos, facingWorldPos);
-            Gizmos.DrawWireSphere(facingWorldPos, 0.1f);
+            Gizmos.color = Color.blue;
+            var directionEnd = worldPos + new Vector3(facingDirection.x, 0, facingDirection.y) * 0.5f;
+            Gizmos.DrawLine(worldPos, directionEnd);
+            Gizmos.DrawWireSphere(directionEnd, 0.1f);
             
-            // Draw vision range (if there's a valid connection)
-            var graph = _levelManager.GetCurrentGraph();
-            var visionNode = _currentNodeId + facingDirection;
-            
-            if (graph.CanMoveFromTo(_currentNodeId, visionNode))
-            {
-                var visionWorldPos = _levelManager.GetNodeActualWorldPosition(visionNode);
-                Gizmos.color = new Color(1f, 0f, 0f, 0.3f); // Semi-transparent red
-                Gizmos.DrawCube(visionWorldPos, Vector3.one * 0.6f);
-                
-                // Draw vision line
-                Gizmos.color = Color.red;
-                Gizmos.DrawLine(worldPos, visionWorldPos);
-            }
+            // Draw state indicator
+            Gizmos.color = GetStateColor(currentState);
+            var statePos = worldPos + Vector3.up * 0.8f;
+            Gizmos.DrawWireCube(statePos, Vector3.one * 0.2f);
         }
+        
+        private Color GetStateColor(EnemyState state)
+        {
+            return state switch
+            {
+                EnemyState.Stationary => Color.green,
+                EnemyState.Patrol => Color.blue,
+                EnemyState.MovingTarget => Color.magenta,
+                _ => Color.white
+            };
+        }
+        
+        #endregion
     }
 }

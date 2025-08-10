@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Gameplay.Enemy;
 
 namespace Gameplay.Graph
 {
@@ -13,6 +14,7 @@ namespace Gameplay.Graph
         
         // Enemy-specific properties
         [SerializeField] public Vector2Int enemyFacingDirection = Vector2Int.up;
+        [SerializeField] public GridEnemy.EnemyState enemyState = GridEnemy.EnemyState.Stationary;
 
         public NodeData(Vector2Int id, NodeType type, bool isDestroyed = false)
         {

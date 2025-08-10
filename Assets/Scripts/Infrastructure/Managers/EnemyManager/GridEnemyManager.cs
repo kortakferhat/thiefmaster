@@ -107,11 +107,18 @@ namespace TowerClicker.Infrastructure
             gridEnemy.SetPosition(nodeId);
             gridEnemy.SetFacingDirection(facingDirection);
             
+            // Set enemy state from NodeData if available
+            var nodeData = GetNodeData(nodeId);
+            if (nodeData != null)
+            {
+                gridEnemy.SetEnemyState(nodeData.enemyState);
+            }
+            
             // Add to active enemies list
             _activeEnemies.Add(gridEnemy);
             
             if (showDebugLogs)
-                Debug.Log($"[GridEnemyManager] Spawned enemy from pool at {nodeId} facing {facingDirection}");
+                Debug.Log($"[GridEnemyManager] Spawned enemy from pool at {nodeId} facing {facingDirection}, state: {nodeData?.enemyState ?? GridEnemy.EnemyState.Stationary}");
         }
         
         public void RemoveEnemy(GridEnemy enemy)

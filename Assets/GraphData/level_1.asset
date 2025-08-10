@@ -40,6 +40,7 @@ MonoBehaviour:
       type: 6
       isDestroyed: 0
       enemyFacingDirection: {x: 0, y: 1}
+      enemyState: 1
     - id: {x: 4, y: -3}
       type: 0
       isDestroyed: 0
@@ -48,6 +49,7 @@ MonoBehaviour:
       type: 6
       isDestroyed: 0
       enemyFacingDirection: {x: 0, y: -1}
+      enemyState: 1
     - id: {x: 2, y: -2}
       type: 0
       isDestroyed: 0

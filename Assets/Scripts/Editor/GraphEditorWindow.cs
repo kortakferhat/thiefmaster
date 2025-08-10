@@ -1,8 +1,10 @@
-using UnityEngine;
-using UnityEditor;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
+using UnityEditor;
 using Gameplay.Graph;
+using Gameplay.Enemy;
 
 namespace Editor
 {
@@ -1615,6 +1617,14 @@ namespace Editor
                         if (GUILayout.Button("← Left")) selectedNode.enemyFacingDirection = Vector2Int.left;
                         if (GUILayout.Button("→ Right")) selectedNode.enemyFacingDirection = Vector2Int.right;
                         EditorGUILayout.EndHorizontal();
+                        
+                        // Enemy state selection
+                        EditorGUILayout.Space();
+                        selectedNode.enemyState = (GridEnemy.EnemyState)EditorGUILayout.EnumPopup("Behavior State", selectedNode.enemyState);
+                        
+                        // State description
+                        string stateDescription = GetEnemyStateDescription(selectedNode.enemyState);
+                        EditorGUILayout.HelpBox(stateDescription, MessageType.Info);
                     }
                     
                     EditorGUILayout.Space();
@@ -1848,6 +1858,21 @@ namespace Editor
                 undoStack.Push(command);
                 EditorUtility.SetDirty(currentGraph);
                 modeFeedback = "Redo executed";
+            }
+        }
+
+        private string GetEnemyStateDescription(GridEnemy.EnemyState state)
+        {
+            switch (state)
+            {
+                case GridEnemy.EnemyState.Stationary:
+                    return "Enemy stays in place, only detects player in vision range.";
+                case GridEnemy.EnemyState.Patrol:
+                    return "Enemy patrols back and forth in facing direction.";
+                case GridEnemy.EnemyState.MovingTarget:
+                    return "Enemy follows player if within 1 edge distance, otherwise becomes stationary.";
+                default:
+                    return "Unknown enemy state.";
             }
         }
     }
