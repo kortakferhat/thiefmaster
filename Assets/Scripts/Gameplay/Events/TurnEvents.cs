@@ -66,4 +66,17 @@ namespace Gameplay.Events
             TurnNumber = turnNumber;
         }
     }
+    
+    /// <summary>
+    /// Event triggered when game over occurs (player detected or eliminated)
+    /// </summary>
+    public class GameOverEvent : ITurnEvent
+    {
+        public int TurnNumber { get; }
+        
+        public GameOverEvent(int turnNumber)
+        {
+            TurnNumber = turnNumber;
+        }
+    }
 }

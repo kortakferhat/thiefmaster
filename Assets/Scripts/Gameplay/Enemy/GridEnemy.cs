@@ -24,6 +24,7 @@ namespace Gameplay.Enemy
         private ITurnManager _turnManager;
         private ILevelManager _levelManager;
         private bool _isInitialized = false;
+        private Vector2Int _currentPlayerNodeId; // Track player position
         
         public Vector2Int CurrentNodeId => _currentNodeId;
         public Vector2Int FacingDirection => facingDirection;
@@ -35,6 +36,14 @@ namespace Gameplay.Enemy
             _turnManager = ServiceLocator.Get<ITurnManager>();
             _levelManager = ServiceLocator.Get<ILevelManager>();
             
+            // Get initial player position from start node
+            var graph = _levelManager.GetCurrentGraph();
+            var startNode = graph.GetStartNode();
+            if (startNode != null)
+            {
+                _currentPlayerNodeId = startNode.Id;
+            }
+            
             // Subscribe to turn events
             EventBus.Subscribe<TurnStartedEvent>(OnTurnStarted);
             EventBus.Subscribe<PlayerMovedEvent>(OnPlayerMoved);
@@ -42,7 +51,7 @@ namespace Gameplay.Enemy
             _isInitialized = true;
             
             if (showDebugLogs)
-                Debug.Log($"[GridEnemy] Initialized at node {_currentNodeId}, facing {facingDirection}");
+                Debug.Log($"[GridEnemy] Initialized at node {_currentNodeId}, facing {facingDirection}, player at {_currentPlayerNodeId}");
         }
         
         /// <summary>
@@ -128,8 +137,14 @@ namespace Gameplay.Enemy
             if (showDebugLogs)
                 Debug.Log($"[GridEnemy] Player moved from {moveEvent.FromNodeId} to {moveEvent.ToNodeId} on turn {moveEvent.TurnNumber}");
             
-            // Check if player is in vision range (we'll implement this next)
-            CheckPlayerDetection(moveEvent.ToNodeId);
+            // Update current player node
+            _currentPlayerNodeId = moveEvent.ToNodeId;
+
+            // Check if player is in vision range (1 depth)
+            CheckPlayerDetection(_currentPlayerNodeId);
+            
+            // Enemy moves after player movement
+            PerformEnemyMovement();
         }
         
         private void CheckPlayerDetection(Vector2Int playerNodeId)
@@ -146,7 +161,8 @@ namespace Gameplay.Enemy
             if (IsPlayerInVision(playerNodeId))
             {
                 Debug.Log($"[GridEnemy] Player spotted at {playerNodeId} - Game Over!");
-                // TODO: Trigger game over event
+                // Trigger game over event
+                EventBus.Publish(new GameOverEvent(_turnManager.CurrentTurn));
             }
         }
         
@@ -175,6 +191,74 @@ namespace Gameplay.Enemy
         }
         
         /// <summary>
+        /// Enemy moves in facing direction, or reverses direction if blocked
+        /// </summary>
+        private void PerformEnemyMovement()
+        {
+            var graph = _levelManager.GetCurrentGraph();
+            var targetNode = _currentNodeId + facingDirection;
+            
+            // Check if we can move in facing direction
+            if (graph.CanMoveFromTo(_currentNodeId, targetNode))
+            {
+                // Check if player is at target node
+                if (IsPlayerAtNode(targetNode))
+                {
+                    // Player is at target node - move there and trigger game over
+                    MoveToNode(targetNode);
+                    EventBus.Publish(new GameOverEvent(_turnManager.CurrentTurn));
+                    return;
+                }
+                
+                // Move to target node
+                MoveToNode(targetNode);
+            }
+            else
+            {
+                // Cannot move in facing direction, reverse direction
+                ReverseFacingDirection();
+                
+                // Try to move in new direction
+                var newTargetNode = _currentNodeId + facingDirection;
+                if (graph.CanMoveFromTo(_currentNodeId, newTargetNode))
+                {
+                    // Check if player is at new target node
+                    if (IsPlayerAtNode(newTargetNode))
+                    {
+                        // Player is at target node - move there and trigger game over
+                        MoveToNode(newTargetNode);
+                        EventBus.Publish(new GameOverEvent(_turnManager.CurrentTurn));
+                        return;
+                    }
+                    
+                    // Move to new target node
+                    MoveToNode(newTargetNode);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Reverse the enemy's facing direction (180 degree turn)
+        /// </summary>
+        private void ReverseFacingDirection()
+        {
+            facingDirection = -facingDirection;
+            UpdateVisualRotation();
+            
+            if (showDebugLogs)
+                Debug.Log($"[GridEnemy] Reversed direction, now facing {facingDirection}");
+        }
+        
+        /// <summary>
+        /// Check if player is at the specified node
+        /// </summary>
+        private bool IsPlayerAtNode(Vector2Int nodeId)
+        {
+            // Use stored player position from event
+            return _currentPlayerNodeId == nodeId;
+        }
+        
+        /// <summary>
         /// Remove this enemy from the game
         /// </summary>
         private void RemoveThisEnemy()
@@ -200,6 +284,7 @@ namespace Gameplay.Enemy
         {
             // Reset enemy state when spawned from pool
             _isInitialized = false;
+            _currentPlayerNodeId = Vector2Int.zero; // Reset player position
             
             if (showDebugLogs)
                 Debug.Log($"[GridEnemy] Spawned from pool");
@@ -209,6 +294,7 @@ namespace Gameplay.Enemy
         {
             // Clean up when returning to pool
             _isInitialized = false;
+            _currentPlayerNodeId = Vector2Int.zero; // Reset player position
             
             // Unsubscribe from events to prevent memory leaks
             EventBus.Unsubscribe<TurnStartedEvent>(OnTurnStarted);
