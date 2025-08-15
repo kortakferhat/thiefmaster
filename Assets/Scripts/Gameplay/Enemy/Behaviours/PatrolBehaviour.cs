@@ -1,7 +1,4 @@
-using UnityEngine;
-using Gameplay.Enemy;
 using Gameplay.Events;
-using Gameplay.Graph;
 using Infrastructure;
 
 namespace Gameplay.Enemy.Behaviours
@@ -9,9 +6,9 @@ namespace Gameplay.Enemy.Behaviours
     /// <summary>
     /// Patrol behaviour - enemy moves back and forth
     /// </summary>
-    public class PatrolBehaviour : IEnemyBehaviour
+    public class PatrolBehaviour : BaseBehaviour
     {
-        public void PerformMovement(GridEnemy enemy)
+        public override void PerformMovement(GridEnemy enemy)
         {
             var graph = enemy.LevelManager.GetCurrentGraph();
             var targetNode = enemy.CurrentNodeId + enemy.FacingDirection;
@@ -19,12 +16,9 @@ namespace Gameplay.Enemy.Behaviours
             // Check if we can move in facing direction
             if (graph.CanMoveFromTo(enemy.CurrentNodeId, targetNode))
             {
-                // Check if player is at target node
-                if (enemy.IsPlayerAtNode(targetNode))
+                var canCatchPlayer = TryCatchPlayer(enemy);
+                if (canCatchPlayer)
                 {
-                    // Player is at target node - move there and trigger game over
-                    enemy.MoveToNode(targetNode);
-                    EventBus.Publish(new LoseEvent(enemy.TurnManager.CurrentTurn, LoseReason.EnemyContact, targetNode));
                     return;
                 }
                 
@@ -40,12 +34,9 @@ namespace Gameplay.Enemy.Behaviours
                 var newTargetNode = enemy.CurrentNodeId + enemy.FacingDirection;
                 if (graph.CanMoveFromTo(enemy.CurrentNodeId, newTargetNode))
                 {
-                    // Check if player is at new target node
-                    if (enemy.IsPlayerAtNode(newTargetNode))
+                    var canCatchPlayer = TryCatchPlayer(enemy);
+                    if (canCatchPlayer)
                     {
-                        // Player is at target node - move there and trigger game over
-                        enemy.MoveToNode(newTargetNode);
-                        EventBus.Publish(new LoseEvent(enemy.TurnManager.CurrentTurn, LoseReason.EnemyContact, newTargetNode));
                         return;
                     }
                     
@@ -53,6 +44,8 @@ namespace Gameplay.Enemy.Behaviours
                     enemy.MoveToNode(newTargetNode);
                 }
             }
+            
+            TryCatchPlayer(enemy); // Check after movement
         }
         
         public string GetBehaviourName() => "Patrol";
