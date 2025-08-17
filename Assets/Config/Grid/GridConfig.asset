@@ -18,7 +18,7 @@ MonoBehaviour:
   additionalVerticalOffset: 0
   edgeLength: 2
   edgeWidth: 1
-  edgeYOffset: -0.2
+  edgeYOffset: -0.7
   showGrid: 1
   showEdges: 1
   showNodes: 1
