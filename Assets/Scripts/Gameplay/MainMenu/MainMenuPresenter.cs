@@ -17,6 +17,7 @@ namespace Gameplay.Views
         private IGameManager _gameManager;
         private IViewManager _viewManager;
         private IEconomyManager _economyManager;
+        private ITurnManager _turnManager;
         
         public MainMenuPresenter(MainMenuModel model, MainMenuView view)
         {
@@ -29,16 +30,24 @@ namespace Gameplay.Views
             _gameManager = ServiceLocator.Get<IGameManager>();
             _viewManager = ServiceLocator.Get<IViewManager>();
             _economyManager = ServiceLocator.Get<IEconomyManager>();
+            _turnManager = ServiceLocator.Get<ITurnManager>();
             
             EventBus.Subscribe<PlayerRewardCollectEvent>(OnPlayerRewardCollect);
             EventBus.Subscribe<PlayerItemCollectEvent>(OnPlayerItemCollect);
             EventBus.Subscribe<EconomyEvent>(OnEconomyEvent);
+            EventBus.Subscribe<TurnCompletedEvent>(OnTurnCompleted);
+            
+            _view.SetRemainingMovesText(_turnManager.RemainingMoves);
+        }
+
+        private void OnTurnCompleted(TurnCompletedEvent args)
+        {
+            _view.SetRemainingMovesText(args.RemainingMoves);
         }
 
         private void OnEconomyEvent(EconomyEvent args)
         {
             _model.SetMoney(args.CurrentMoney);
-            _view.SetMoneyText(_model.Money);
         }
         
         private void OnPlayerItemCollect(PlayerItemCollectEvent args)
@@ -49,7 +58,6 @@ namespace Gameplay.Views
         private void OnPlayerRewardCollect(PlayerRewardCollectEvent args)
         {
             _model.AddMoney(args.Amount);
-            _view.SetMoneyText(_model.Money);
             
             _economyManager.AddMoney(args.Amount);
         }
@@ -64,6 +72,7 @@ namespace Gameplay.Views
             EventBus.Unsubscribe<PlayerRewardCollectEvent>(OnPlayerRewardCollect);
             EventBus.Unsubscribe<PlayerItemCollectEvent>(OnPlayerItemCollect);
             EventBus.Unsubscribe<EconomyEvent>(OnEconomyEvent);
+            EventBus.Unsubscribe<TurnCompletedEvent>(OnTurnCompleted);
         }
     }
 }

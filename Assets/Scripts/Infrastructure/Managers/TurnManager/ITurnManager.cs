@@ -5,6 +5,7 @@ namespace TowerClicker.Infrastructure
     public interface ITurnManager : IService
     {
         int CurrentTurn { get; }
+        int RemainingMoves { get; }
         bool IsTurnInProgress { get; }
         void Initialize();
         void StartNextTurn();

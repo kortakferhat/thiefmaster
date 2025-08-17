@@ -1,8 +1,6 @@
-using System;
 using Gameplay.MVP;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Gameplay.MainMenu
 {
@@ -10,7 +8,7 @@ namespace Gameplay.MainMenu
     {
         //public Button towerPopupButton;
 
-        [SerializeField] private TextMeshProUGUI moneyText;
+        [SerializeField] private TextMeshProUGUI remainingMovesText;
         
         //public event Action OnTowerPopupButtonClicked;
 
@@ -19,9 +17,9 @@ namespace Gameplay.MainMenu
             //towerPopupButton.onClick.AddListener(() => OnTowerPopupButtonClicked?.Invoke());
         }
         
-        public void SetMoneyText(int money)
+        public void SetRemainingMovesText(int remainingMoves)
         {
-            moneyText.text = $"{money}$";
+            remainingMovesText.text = $"Moves: {remainingMoves}";
         }
     }
 }

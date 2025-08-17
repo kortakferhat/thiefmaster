@@ -13,10 +13,12 @@ namespace Gameplay.Events
     public class TurnStartedEvent : ITurnEvent
     {
         public int TurnNumber { get; }
-        
-        public TurnStartedEvent(int turnNumber)
+        public int RemainingMoves { get; }
+
+        public TurnStartedEvent(int turnNumber, int remainingMoves)
         {
             TurnNumber = turnNumber;
+            RemainingMoves = remainingMoves;
         }
     }
     
@@ -26,10 +28,12 @@ namespace Gameplay.Events
     public class TurnCompletedEvent : ITurnEvent
     {
         public int TurnNumber { get; }
+        public int RemainingMoves { get; }
         
-        public TurnCompletedEvent(int turnNumber)
+        public TurnCompletedEvent(int turnNumber, int remainingMoves)
         {
             TurnNumber = turnNumber;
+            RemainingMoves = remainingMoves;
         }
     }
     
