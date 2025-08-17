@@ -53,7 +53,7 @@ namespace Gameplay.Character
         private void InitializeInputSystem()
         {
             _playerInputActions = new InputSystem_Actions();
-            _playerInputActions.Player.Move.performed += OnMovementPerformed;
+            _playerInputActions.Player.Move.performed += OnMovementInputPerformed;
             _playerInputActions.Player.Enable();
         }
         
@@ -117,10 +117,11 @@ namespace Gameplay.Character
             }
         }
         
-        private void OnMovementPerformed(InputAction.CallbackContext context)
+        private void OnMovementInputPerformed(InputAction.CallbackContext context)
         {
             if (_isMoving) return;
             if (_turnManager.IsTurnInProgress) return; // Prevent input during turn processing
+            if (_gameManager.State != GameState.Game)  return;
             
             var input = context.ReadValue<Vector2>();
             var direction = GetDirectionFromInput(input);
@@ -250,7 +251,7 @@ namespace Gameplay.Character
             // Kill all tweens on this transform to be safe
             characterTransform.DOKill();
             
-            _playerInputActions.Player.Move.performed -= OnMovementPerformed;
+            _playerInputActions.Player.Move.performed -= OnMovementInputPerformed;
             _playerInputActions.Player.Disable();
             _playerInputActions.Dispose();
             
