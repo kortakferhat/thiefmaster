@@ -17,6 +17,7 @@ namespace TowerClicker.Infrastructure
             set
             {
                 _state = value;
+                EventBus.Publish(new GameEvents.GameStateChangeEvent(_state));
                 OnStateChanged?.Invoke(_state);
             }
         }
@@ -37,13 +38,13 @@ namespace TowerClicker.Infrastructure
         private void OnPlayerWon(WinEvent winEvent)
         {
             Debug.Log($"[GameManager] Player won at turn {winEvent.TurnNumber}, goal node: {winEvent.GoalNodeId}");
-            State = GameState.Win;
+            State = GameState.Finish;
         }
         
         private void OnPlayerLost(LoseEvent loseEvent)
         {
             Debug.Log($"[GameManager] Player lost at turn {loseEvent.TurnNumber}, reason: {loseEvent.Reason}, enemy node: {loseEvent.EnemyNodeId}");
-            State = GameState.Lose;
+            State = GameState.Finish;
         }
 
         public void StartGame()
@@ -64,21 +65,21 @@ namespace TowerClicker.Infrastructure
             // Resume game logic here
         }
 
-        public void EndGame()
+        public void FinishGame()
         {
-            State = GameState.GameOver;
+            State = GameState.Finish;
             // End game logic here
         }
         
         public void WinGame()
         {
-            State = GameState.Win;
+            State = GameState.Finish;
             Debug.Log("[GameManager] Game won!");
         }
         
         public void LoseGame()
         {
-            State = GameState.Lose;
+            State = GameState.Finish;
             Debug.Log("[GameManager] Game lost!");
             
             // Auto-restart after a short delay

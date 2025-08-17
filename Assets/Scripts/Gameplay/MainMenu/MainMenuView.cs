@@ -1,17 +1,16 @@
 using Gameplay.MVP;
 using TMPro;
+using TowerClicker.Infrastructure;
 using UnityEngine;
 
 namespace Gameplay.MainMenu
 {
     public class MainMenuView : MonoBehaviour, IView
     {
-        //public Button towerPopupButton;
-
         [SerializeField] private TextMeshProUGUI remainingMovesText;
+        [SerializeField] private TextMeshProUGUI gameOverText;
+        [SerializeField] private TextMeshProUGUI pauseText;
         
-        //public event Action OnTowerPopupButtonClicked;
-
         private void Awake()
         {
             //towerPopupButton.onClick.AddListener(() => OnTowerPopupButtonClicked?.Invoke());
@@ -23,7 +22,54 @@ namespace Gameplay.MainMenu
             
             var textColor = remainingMoves > 3 ? Color.white : Color.yellow;
             remainingMovesText.color = textColor;
+        }
+
+        public void ShowPauseText()
+        {
+            pauseText.gameObject.SetActive(true);
+        }
+        
+        public void HidePauseText()
+        {
+            pauseText.gameObject.SetActive(false);
+        }
+
+        public void ShowGameOverText()
+        {
+            gameOverText.gameObject.SetActive(true);
+        }
+
+        public void HideGameOverText()
+        {
+            gameOverText.gameObject.SetActive(false);
+        }
+
+        public void HideAllTexts()
+        {
+            HidePauseText();
+            HideGameOverText();
+        }
+
+        public void PrepareGameStateChange(GameState argsCurrentState)
+        {
+            HideAllTexts();
             
+            if (argsCurrentState == GameState.Game)
+            {
+                return;
+            }
+            
+            if (argsCurrentState == GameState.Pause)
+            {
+                ShowPauseText();
+                return;
+            }
+
+            if (argsCurrentState == GameState.Finish)
+            {
+                ShowGameOverText();
+                return;
+            }
         }
     }
 }

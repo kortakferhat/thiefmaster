@@ -8,9 +8,7 @@ namespace TowerClicker.Infrastructure
         MainMenu,
         Game,
         Pause,
-        GameOver,
-        Win,
-        Lose
+        Finish,
     }
     
     public interface IGameManager : IService
@@ -21,7 +19,7 @@ namespace TowerClicker.Infrastructure
         void StartGame();
         void PauseGame();
         void ResumeGame();
-        void EndGame();
+        void FinishGame();
         void WinGame();
         void LoseGame();
         void RestartGame();

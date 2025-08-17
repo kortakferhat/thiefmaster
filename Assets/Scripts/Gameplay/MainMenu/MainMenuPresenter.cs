@@ -36,8 +36,14 @@ namespace Gameplay.Views
             EventBus.Subscribe<PlayerItemCollectEvent>(OnPlayerItemCollect);
             EventBus.Subscribe<EconomyEvent>(OnEconomyEvent);
             EventBus.Subscribe<TurnCompletedEvent>(OnTurnCompleted);
+            EventBus.Subscribe<GameEvents.GameStateChangeEvent>(OnGameStateChange);
             
             _view.SetRemainingMovesText(_turnManager.RemainingMoves);
+        }
+
+        private void OnGameStateChange(GameEvents.GameStateChangeEvent args)
+        {
+            _view.PrepareGameStateChange(args.CurrentState);
         }
 
         private void OnTurnCompleted(TurnCompletedEvent args)
@@ -73,6 +79,7 @@ namespace Gameplay.Views
             EventBus.Unsubscribe<PlayerItemCollectEvent>(OnPlayerItemCollect);
             EventBus.Unsubscribe<EconomyEvent>(OnEconomyEvent);
             EventBus.Unsubscribe<TurnCompletedEvent>(OnTurnCompleted);
+            EventBus.Unsubscribe<GameEvents.GameStateChangeEvent>(OnGameStateChange);
         }
     }
 }

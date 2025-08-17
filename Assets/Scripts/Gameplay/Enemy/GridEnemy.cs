@@ -233,7 +233,7 @@ namespace Gameplay.Enemy
             // Check if player is in vision range (1 depth)
             if (IsPlayerInVision(playerNodeId))
             {
-                Debug.Log($"[GridEnemy] Player spotted at {playerNodeId} - Game Over!");
+                _gameManager.LoseGame();
                 EventBus.Publish(new LoseEvent(_turnManager.CurrentTurn, LoseReason.EnemyDetection, _currentNodeId));
                 return;
             }
