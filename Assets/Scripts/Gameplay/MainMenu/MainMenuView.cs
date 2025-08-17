@@ -19,7 +19,11 @@ namespace Gameplay.MainMenu
         
         public void SetRemainingMovesText(int remainingMoves)
         {
-            remainingMovesText.text = $"Moves: {remainingMoves}";
+            remainingMovesText.text = remainingMoves.ToString();
+            
+            var textColor = remainingMoves > 3 ? Color.white : Color.yellow;
+            remainingMovesText.color = textColor;
+            
         }
     }
 }
