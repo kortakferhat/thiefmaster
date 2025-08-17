@@ -1,10 +1,16 @@
 using Gameplay.Events;
 using Infrastructure;
+using UnityEngine;
 
 namespace Gameplay.Enemy.Behaviours
 {
-    public class BaseBehaviour : IEnemyBehaviour
+    public class BaseEnemyBehaviour : IEnemyBehaviour
     {
+        public virtual void OnTurnFinish(GridEnemy enemy)
+        {
+            TryCatchPlayer(enemy);
+        }
+        
         public virtual void PerformMovement(GridEnemy enemy)
         {
         }
@@ -38,6 +44,11 @@ namespace Gameplay.Enemy.Behaviours
             }
 
             return false;
+        }
+
+        public void OnTurnComplete(GridEnemy enemy)
+        {
+            TryCatchPlayer(enemy);
         }
     }
 }

@@ -227,10 +227,10 @@ namespace TowerClicker.Infrastructure
         {
             return behaviourType switch
             {
-                "Stationary" => new StationaryBehaviour(),
-                "Patrol" => new PatrolBehaviour(),
-                "MovingTarget" => new MovingTargetBehaviour(),
-                _ => new StationaryBehaviour() // Default fallback
+                "Stationary" => new StationaryEnemyBehaviour(),
+                "Patrol" => new PatrolEnemyBehaviour(),
+                "MovingTarget" => new MovingTargetEnemyBehaviour(),
+                _ => new StationaryEnemyBehaviour() // Default fallback
             };
         }
         

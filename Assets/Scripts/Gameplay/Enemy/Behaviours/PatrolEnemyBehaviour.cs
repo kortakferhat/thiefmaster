@@ -6,10 +6,12 @@ namespace Gameplay.Enemy.Behaviours
     /// <summary>
     /// Patrol behaviour - enemy moves back and forth
     /// </summary>
-    public class PatrolBehaviour : BaseBehaviour
+    public class PatrolEnemyBehaviour : BaseEnemyBehaviour
     {
         public override void PerformMovement(GridEnemy enemy)
         {
+            base.PerformMovement(enemy);
+
             var graph = enemy.LevelManager.GetCurrentGraph();
             var targetNode = enemy.CurrentNodeId + enemy.FacingDirection;
             
@@ -44,8 +46,6 @@ namespace Gameplay.Enemy.Behaviours
                     enemy.MoveToNode(newTargetNode);
                 }
             }
-            
-            TryCatchPlayer(enemy); // Check after movement
         }
         
         public string GetBehaviourName() => "Patrol";

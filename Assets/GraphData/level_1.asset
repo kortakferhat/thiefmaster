@@ -20,33 +20,34 @@ MonoBehaviour:
       type: 2
       isDestroyed: 0
       enemyFacingDirection: {x: 0, y: 0}
+      enemyBehaviourType: 
     - id: {x: 3, y: -5}
       type: 1
       isDestroyed: 0
       enemyFacingDirection: {x: 0, y: 0}
+      enemyBehaviourType: 
     - id: {x: 3, y: -4}
       type: 0
       isDestroyed: 0
       enemyFacingDirection: {x: 0, y: 0}
+      enemyBehaviourType: 
     - id: {x: 2, y: -4}
       type: 0
       isDestroyed: 0
       enemyFacingDirection: {x: 0, y: 0}
+      enemyBehaviourType: 
     - id: {x: 4, y: -4}
       type: 0
       isDestroyed: 0
       enemyFacingDirection: {x: 0, y: 0}
-    - id: {x: 3, y: -3}
-      type: 6
-      isDestroyed: 0
-      enemyFacingDirection: {x: 0, y: 1}
-      enemyBehaviourType: Patrol
+      enemyBehaviourType: 
     - id: {x: 4, y: -3}
       type: 0
       isDestroyed: 0
       enemyFacingDirection: {x: 0, y: 0}
+      enemyBehaviourType: 
     - id: {x: 2, y: -3}
-      type: 6
+      type: 0
       isDestroyed: 0
       enemyFacingDirection: {x: 0, y: -1}
       enemyBehaviourType: Patrol
@@ -54,14 +55,22 @@ MonoBehaviour:
       type: 0
       isDestroyed: 0
       enemyFacingDirection: {x: 0, y: 0}
+      enemyBehaviourType: 
     - id: {x: 3, y: -2}
-      type: 0
+      type: 6
       isDestroyed: 0
-      enemyFacingDirection: {x: 0, y: 0}
+      enemyFacingDirection: {x: 0, y: -1}
+      enemyBehaviourType: Patrol
     - id: {x: 4, y: -2}
       type: 0
       isDestroyed: 0
       enemyFacingDirection: {x: 0, y: 0}
+      enemyBehaviourType: 
+    - id: {x: 3, y: -3}
+      type: 0
+      isDestroyed: 0
+      enemyFacingDirection: {x: 0, y: -1}
+      enemyBehaviourType: Patrol
     edges:
     - fromId: {x: 3, y: -4}
       toId: {x: 2, y: -4}
@@ -83,31 +92,15 @@ MonoBehaviour:
       toId: {x: 3, y: -4}
       type: 0
       isUsed: 0
-    - fromId: {x: 2, y: -3}
-      toId: {x: 3, y: -3}
-      type: 0
-      isUsed: 0
-    - fromId: {x: 3, y: -4}
-      toId: {x: 3, y: -3}
-      type: 0
-      isUsed: 0
     - fromId: {x: 4, y: -4}
       toId: {x: 4, y: -3}
       type: 0
       isUsed: 0
-    - fromId: {x: 3, y: -3}
-      toId: {x: 4, y: -3}
-      type: 0
-      isUsed: 0
     - fromId: {x: 4, y: -2}
       toId: {x: 4, y: -3}
       type: 0
       isUsed: 0
     - fromId: {x: 4, y: -2}
-      toId: {x: 3, y: -2}
-      type: 0
-      isUsed: 0
-    - fromId: {x: 3, y: -3}
       toId: {x: 3, y: -2}
       type: 0
       isUsed: 0
@@ -121,6 +114,22 @@ MonoBehaviour:
       isUsed: 0
     - fromId: {x: 3, y: -2}
       toId: {x: 3, y: -1}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 2, y: -3}
+      toId: {x: 3, y: -3}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 3, y: -4}
+      toId: {x: 3, y: -3}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 3, y: -3}
+      toId: {x: 4, y: -3}
+      type: 0
+      isUsed: 0
+    - fromId: {x: 3, y: -3}
+      toId: {x: 3, y: -2}
       type: 0
       isUsed: 0
     graphName: Level1

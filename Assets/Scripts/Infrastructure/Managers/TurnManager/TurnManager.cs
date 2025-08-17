@@ -13,9 +13,6 @@ namespace TowerClicker.Infrastructure
         public int CurrentTurn => _currentTurn;
         public bool IsTurnInProgress => _isTurnInProgress;
         
-        public event Action<int> OnTurnStarted;
-        public event Action<int> OnTurnCompleted;
-        
         public void Initialize()
         {
             _currentTurn = 0;
@@ -38,7 +35,6 @@ namespace TowerClicker.Infrastructure
             Debug.Log($"[TurnManager] Turn {_currentTurn} started");
             
             // Trigger events
-            OnTurnStarted?.Invoke(_currentTurn);
             EventBus.Publish(new TurnStartedEvent(_currentTurn));
         }
         
@@ -55,7 +51,6 @@ namespace TowerClicker.Infrastructure
             Debug.Log($"[TurnManager] Turn {_currentTurn} completed");
             
             // Trigger events
-            OnTurnCompleted?.Invoke(_currentTurn);
             EventBus.Publish(new TurnCompletedEvent(_currentTurn));
         }
         

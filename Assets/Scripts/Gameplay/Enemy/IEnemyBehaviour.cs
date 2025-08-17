@@ -8,5 +8,6 @@ namespace Gameplay.Enemy
         void PerformMovement(GridEnemy enemy);
         string GetBehaviourName();
         public bool TryCatchPlayer(GridEnemy enemy);
+        public void OnTurnComplete(GridEnemy enemy);
     }
 }

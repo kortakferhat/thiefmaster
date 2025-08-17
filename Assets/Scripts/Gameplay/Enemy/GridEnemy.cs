@@ -18,7 +18,6 @@ namespace Gameplay.Enemy
         [Header("Enemy Settings")]
         [SerializeField] private Transform enemyTransform;
         [SerializeField] private Vector2Int facingDirection = Vector2Int.up;
-        [SerializeField] private IEnemyBehaviour currentBehaviour;
         
         [Header("Movement Animation")]
         [SerializeField] private float moveDuration = 0.3f;
@@ -28,6 +27,7 @@ namespace Gameplay.Enemy
         [Header("Debug")]
         [SerializeField] private bool showDebugLogs = true;
         
+        private IEnemyBehaviour _currentBehaviour;
         private Vector2Int _currentNodeId;
         private ITurnManager _turnManager;
         private ILevelManager _levelManager;
@@ -51,11 +51,12 @@ namespace Gameplay.Enemy
             _levelManager = ServiceLocator.Get<ILevelManager>();
             
             // Set default behaviour
-            if (currentBehaviour == null)
-                currentBehaviour = new StationaryBehaviour();
+            if (_currentBehaviour == null)
+                _currentBehaviour = new StationaryEnemyBehaviour();
             
             // Subscribe to events
             EventBus.Subscribe<PlayerMovedEvent>(OnPlayerMoved);
+            EventBus.Subscribe<TurnCompletedEvent>(OnTurnCompleted);
             
             // Get start node position
             var startNode = _levelManager.GetCurrentGraph().GetStartNode();
@@ -64,9 +65,15 @@ namespace Gameplay.Enemy
             _isInitialized = true;
             
             if (showDebugLogs)
-                Debug.Log($"[GridEnemy] Initialized at {_currentNodeId}, facing {facingDirection}, behaviour: {currentBehaviour.GetBehaviourName()}");
+                Debug.Log($"[GridEnemy] Initialized at {_currentNodeId}, facing {facingDirection}, behaviour: {_currentBehaviour.GetBehaviourName()}");
         }
-        
+
+        private void OnTurnCompleted(TurnCompletedEvent args)
+        {
+            _currentBehaviour.OnTurnComplete(this);
+        }
+
+
         /// <summary>
         /// Set the enemy's position on the grid
         /// </summary>
@@ -111,6 +118,8 @@ namespace Gameplay.Enemy
             
             _isMoving = true;
             
+            _currentNodeId = newNodeId;
+
             // Create delay tween first, then animate movement
             _currentMoveTween = DOVirtual.DelayedCall(moveDelay, () => {
                 // Check if still moving (not interrupted)
@@ -155,11 +164,11 @@ namespace Gameplay.Enemy
         /// </summary>
         public void SetBehaviour(IEnemyBehaviour newBehaviour)
         {
-            var previousBehaviour = currentBehaviour;
-            currentBehaviour = newBehaviour;
+            var previousBehaviour = _currentBehaviour;
+            _currentBehaviour = newBehaviour;
             
             if (showDebugLogs)
-                Debug.Log($"[GridEnemy] Behaviour changed from {previousBehaviour?.GetBehaviourName()} to {currentBehaviour.GetBehaviourName()}");
+                Debug.Log($"[GridEnemy] Behaviour changed from {previousBehaviour?.GetBehaviourName()} to {_currentBehaviour.GetBehaviourName()}");
         }
         
         private void UpdateVisualRotation()
@@ -257,7 +266,7 @@ namespace Gameplay.Enemy
         /// </summary>
         private void PerformEnemyMovement()
         {
-            currentBehaviour?.PerformMovement(this);
+            _currentBehaviour?.PerformMovement(this);
         }
         
         /// <summary>
@@ -308,6 +317,7 @@ namespace Gameplay.Enemy
             // Unsubscribe from events
             EventBus.Unsubscribe<PlayerMovedEvent>(OnPlayerMoved);
             EventBus.Unsubscribe<TurnStartedEvent>(OnTurnStarted);
+            EventBus.Unsubscribe<TurnCompletedEvent>(OnTurnCompleted);
         }
         
         #region IPoolable Implementation
@@ -377,7 +387,7 @@ namespace Gameplay.Enemy
             Gizmos.DrawWireSphere(directionEnd, 0.1f);
             
             // Draw behaviour indicator
-            Gizmos.color = GetBehaviourColor(currentBehaviour);
+            Gizmos.color = GetBehaviourColor(_currentBehaviour);
             var behaviourPos = worldPos + Vector3.up * 0.8f;
             Gizmos.DrawWireCube(behaviourPos, Vector3.one * 0.2f);
         }

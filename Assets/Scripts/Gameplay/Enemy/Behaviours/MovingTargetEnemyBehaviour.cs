@@ -5,10 +5,11 @@ namespace Gameplay.Enemy.Behaviours
     /// <summary>
     /// MovingTarget behaviour - follows player if within 1 edge distance
     /// </summary>
-    public class MovingTargetBehaviour : BaseBehaviour
+    public class MovingTargetEnemyBehaviour : BaseEnemyBehaviour
     {
         public override void PerformMovement(GridEnemy enemy)
         {
+            base.PerformMovement(enemy);
             // Check if player is within 1 edge distance
            
             var canCatchPlayer = TryCatchPlayer(enemy);
@@ -17,7 +18,7 @@ namespace Gameplay.Enemy.Behaviours
                 return;
             }
             
-            enemy.SetBehaviour(new StationaryBehaviour());
+            enemy.SetBehaviour(new StationaryEnemyBehaviour());
             if (enemy.ShowDebugLogs)
             {
                 Debug.Log($"[GridEnemy] Player too far, switching to Stationary");
