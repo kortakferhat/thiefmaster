@@ -4,6 +4,7 @@ using Gameplay.Events;
 using Infrastructure.Managers.LevelManager;
 using Infrastructure;
 using DG.Tweening;
+using Gameplay.Character;
 using Infrastructure.Managers;
 using TowerClicker.Infrastructure;
 using Gameplay.Enemy.Behaviours;
@@ -17,6 +18,7 @@ namespace Gameplay.Enemy
     {
         [Header("Enemy Settings")]
         [SerializeField] private Transform enemyTransform;
+        [SerializeField] private Animator animator;
         [SerializeField] private Vector2Int facingDirection = Vector2Int.up;
         
         [Header("Movement Animation")]
@@ -33,7 +35,6 @@ namespace Gameplay.Enemy
         private ILevelManager _levelManager;
         private bool _isInitialized = false;
         private Vector2Int _currentPlayerNodeId; // Track player position
-        private bool _isMoving = false;
         private Tween _currentMoveTween;
         
         public Vector2Int CurrentNodeId => _currentNodeId;
@@ -42,6 +43,31 @@ namespace Gameplay.Enemy
         public ITurnManager TurnManager => _turnManager;
         public ILevelManager LevelManager => _levelManager;
         public bool ShowDebugLogs => showDebugLogs;
+
+        
+        #region Animation States // TODO: Refactor
+        
+        private CharacterState _currentState = CharacterState.Idle;
+        private static readonly int State = Animator.StringToHash("State");
+
+        private void SetCurrentState(CharacterState newState)
+        {
+            if (_currentState == newState) return;
+
+            _currentState = newState;
+            SetAnimationState(_currentState);
+
+            if (showDebugLogs)
+                Debug.Log($"[CharacterController] State changed to {_currentState}");
+        }
+
+        private void SetAnimationState(CharacterState state)
+        {
+            animator.SetInteger(State, (int)state);
+        }
+        
+        #endregion
+ 
         
         public override void Initialize()
         {
@@ -94,7 +120,7 @@ namespace Gameplay.Enemy
         /// </summary>
         public void MoveToNode(Vector2Int newNodeId)
         {
-            if (_isMoving) 
+            if (_currentState is CharacterState.Moving) 
             {
                 if (showDebugLogs)
                     Debug.Log($"[GridEnemy] Already moving, ignoring move request to {newNodeId}");
@@ -116,15 +142,16 @@ namespace Gameplay.Enemy
             var targetPos = _levelManager.GetNodeActualWorldPosition(newNodeId);
             var targetRotation = GetRotationFromDirection(moveDirection);
             
-            _isMoving = true;
-            
+            SetCurrentState(CharacterState.Moving);
+            SetAnimationState(CharacterState.Idle);
             _currentNodeId = newNodeId;
 
             // Create delay tween first, then animate movement
             _currentMoveTween = DOVirtual.DelayedCall(moveDelay, () => {
                 // Check if still moving (not interrupted)
-                if (!_isMoving) return;
-                
+                if (_currentState != CharacterState.Moving) return;
+                SetAnimationState(CharacterState.Moving);
+
                 // Animate movement and rotation
                 DOTween.Sequence()
                     .Insert(0f, enemyTransform.DORotate(targetRotation, moveDuration * 0.5f).SetEase(moveEase))
@@ -139,7 +166,7 @@ namespace Gameplay.Enemy
         /// </summary>
         private void OnMoveComplete(Vector2Int newNodeId)
         {
-            _isMoving = false;
+            SetCurrentState(CharacterState.Idle);
             _currentMoveTween = null; // Clear tween reference
             _currentNodeId = newNodeId; // Update current node ID after animation
             
@@ -312,8 +339,6 @@ namespace Gameplay.Enemy
                 _currentMoveTween = null;
             }
             
-            _isMoving = false;
-            
             // Unsubscribe from events
             EventBus.Unsubscribe<PlayerMovedEvent>(OnPlayerMoved);
             EventBus.Unsubscribe<TurnStartedEvent>(OnTurnStarted);
@@ -334,7 +359,7 @@ namespace Gameplay.Enemy
                 _currentMoveTween = null;
             }
             
-            _isMoving = false;
+            SetCurrentState(CharacterState.Idle);
             _currentPlayerNodeId = Vector2Int.zero;
             
             // Initialize if not already done
@@ -356,7 +381,7 @@ namespace Gameplay.Enemy
                 _currentMoveTween = null;
             }
             
-            _isMoving = false;
+            SetCurrentState(CharacterState.Idle);
             _currentPlayerNodeId = Vector2Int.zero;
             
             // Unsubscribe from events
