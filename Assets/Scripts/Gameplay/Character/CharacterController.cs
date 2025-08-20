@@ -3,24 +3,38 @@ using UnityEngine.InputSystem;
 using Gameplay.Graph;
 using Gameplay.Events;
 using Infrastructure.Managers.LevelManager;
-using Infrastructure.Managers;
 using TowerClicker.Infrastructure;
 using Infrastructure;
 using DG.Tweening;
 
 namespace Gameplay.Character
 {
+    public enum CharacterState : byte
+    {
+        Idle = 0,
+        Moving = 1,
+        Attacking = 2,
+        Defending = 3,
+        Win = 4,
+        Dead = 5
+    }
+    
     public class CharacterController : BaseEntity
     {
+        // Interface properties
+        public Vector2Int CurrentNodeId => _currentNodeId;
+        public CharacterState CurrentState => _currentState;
+        
         [Header("Components")]
         [SerializeField] private Transform characterTransform;
+        [SerializeField] private Animator animator;
         
         [Header("Movement Settings")]
-        [SerializeField] private float moveDuration = 0.3f;
+        [SerializeField] private float moveDuration = 1f;
         [SerializeField] private Ease moveEase = Ease.OutQuad;
         
         [Header("Rotation Settings")]
-        [SerializeField] private float rotationDuration = 0.2f;
+        [SerializeField] private float rotationDuration = 0.25f;
         [SerializeField] private Ease rotationEase = Ease.OutQuad;
         
         [Header("Debug")]
@@ -30,12 +44,10 @@ namespace Gameplay.Character
         private Vector2Int _currentNodeId;
         private ILevelManager _levelManager;
         private ITurnManager _turnManager;
-        private bool _isMoving = false;
         private Tween _currentMoveTween;
+        private CharacterState _currentState = CharacterState.Idle;
         
-        // Interface properties
-        public Vector2Int CurrentNodeId => _currentNodeId;
-        public bool IsMoving => _isMoving;
+        private static readonly int State = Animator.StringToHash("State");
         
         public override void Initialize()
         {
@@ -86,7 +98,7 @@ namespace Gameplay.Character
             }
             
             // Reset movement state
-            _isMoving = false;
+            SetCurrentState(CharacterState.Idle);
             
             // Update current node ID
             _currentNodeId = startNode.Id;
@@ -119,7 +131,7 @@ namespace Gameplay.Character
         
         private void OnMovementInputPerformed(InputAction.CallbackContext context)
         {
-            if (_isMoving) return;
+            if (_currentState is CharacterState.Moving) return;
             if (_turnManager.IsTurnInProgress) return; // Prevent input during turn processing
             if (_gameManager.State != GameState.Game)  return;
             
@@ -187,23 +199,24 @@ namespace Gameplay.Character
             // Kill previous tween if it exists
             if (_currentMoveTween != null && _currentMoveTween.IsActive())
             {
-                _currentMoveTween.Kill();
+                _currentMoveTween.Kill(true);
             }
             
-            _isMoving = true;
+            SetCurrentState(CharacterState.Moving);
             var targetPos = _levelManager.GetNodeActualWorldPosition(_currentNodeId);
             var targetRotation = GetRotationFromDirection(direction);
             
             _currentMoveTween = DOTween.Sequence()
                 .Insert(0f, characterTransform.DORotate(targetRotation, rotationDuration).SetEase(rotationEase))
                 .Insert(0f, characterTransform.DOMove(targetPos, moveDuration).SetEase(moveEase))
+                .InsertCallback(moveDuration * .75f, () => { SetAnimationState(CharacterState.Idle); }).SetEase(moveEase)
                 .OnComplete(OnMoveComplete)
                 .SetAutoKill(true);
         }
         
         private void OnMoveComplete()
         {
-            _isMoving = false;
+            SetCurrentState(CharacterState.Idle);
             _currentMoveTween = null;
             
             // Check if player reached goal node
@@ -257,6 +270,22 @@ namespace Gameplay.Character
             
             _levelManager.OnLevelLoaded -= OnLevelLoaded;
             _levelManager.OnGridInstantiated -= OnGridInstantiated;
+        }
+
+        private void SetCurrentState(CharacterState newState)
+        {
+            if (_currentState == newState) return;
+
+            _currentState = newState;
+            SetAnimationState(_currentState);
+
+            if (showDebugLogs)
+                Debug.Log($"[CharacterController] State changed to {_currentState}");
+        }
+
+        private void SetAnimationState(CharacterState state)
+        {
+            animator.SetInteger(State, (int)state);
         }
     }
 }
