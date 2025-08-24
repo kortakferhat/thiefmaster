@@ -46,9 +46,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   characterTransform: {fileID: 4621229515235408885}
-  moveDuration: 0.3
-  moveEase: 6
-  rotationDuration: 0.2
+  animator: {fileID: 6636731139231150690}
+  moveDuration: 0.75
+  moveEase: 3
+  rotationDuration: 0.25
   rotationEase: 6
   showDebugLogs: 1
 --- !u!1001 &3584121616759454029
@@ -127,5 +128,10 @@ PrefabInstance:
 --- !u!4 &791027261256542232 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4271400933195665749, guid: 6643f8ba9e16e4489b62166b689d3601, type: 3}
+  m_PrefabInstance: {fileID: 3584121616759454029}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &6636731139231150690 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 7901350385826892591, guid: 6643f8ba9e16e4489b62166b689d3601, type: 3}
   m_PrefabInstance: {fileID: 3584121616759454029}
   m_PrefabAsset: {fileID: 0}

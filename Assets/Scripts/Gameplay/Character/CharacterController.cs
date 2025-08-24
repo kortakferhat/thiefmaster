@@ -217,7 +217,14 @@ namespace Gameplay.Character
             _currentMoveTween = DOTween.Sequence()
                 .Insert(0f, characterTransform.DORotate(targetRotation, rotationDuration).SetEase(rotationEase))
                 .Insert(0f, characterTransform.DOMove(targetPos, moveDuration).SetEase(moveEase))
-                //.InsertCallback(moveDuration * .75f, () => { SetAnimationState(CharacterState.Idle); }).SetEase(moveEase)
+                .InsertCallback(moveDuration * .75f, () =>
+                {
+                    if (_currentState is not CharacterState.Dead)
+                    {
+                        SetAnimationState(CharacterState.Idle);
+                    }
+                    
+                }).SetEase(moveEase)
                 .OnComplete(OnMoveComplete)
                 .SetAutoKill(true);
         }

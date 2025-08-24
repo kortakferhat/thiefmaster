@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 8bd97eea987e849278646794cb80e3ba
+guid: 70e9e939e08f84cf2bb4f2ccbdca06e1
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -31,11 +31,11 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: CharacterWalk_Crouched
+      name: Character_Walk
       takeName: mixamo.com
       internalID: -203655887218126122
       firstFrame: 0
-      lastFrame: 32
+      lastFrame: 35
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
