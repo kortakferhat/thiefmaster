@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using Gameplay.Events;
 using Infrastructure;
@@ -24,6 +25,9 @@ namespace TowerClicker.Infrastructure
 
         public event Action<GameState> OnStateChanged;
 
+        private const float LoseWaitTime = 1f;
+        private const float RestartGameDelay = 2f;
+        
         public void Initialize()
         {
             State = GameState.Initializing;
@@ -44,7 +48,7 @@ namespace TowerClicker.Infrastructure
         private void OnPlayerLost(LoseEvent loseEvent)
         {
             Debug.Log($"[GameManager] Player lost at turn {loseEvent.TurnNumber}, reason: {loseEvent.Reason}, enemy node: {loseEvent.EnemyNodeId}");
-            State = GameState.Finish;
+            LoseGame();
         }
 
         public void StartGame()
@@ -77,18 +81,14 @@ namespace TowerClicker.Infrastructure
             Debug.Log("[GameManager] Game won!");
         }
         
-        public void LoseGame()
+        public async void LoseGame()
         {
+            await UniTask.WaitForSeconds(LoseWaitTime, cancellationToken: this.GetCancellationTokenOnDestroy()).SuppressCancellationThrow();
+
             State = GameState.Finish;
             Debug.Log("[GameManager] Game lost!");
             
-            // Auto-restart after a short delay
-            StartCoroutine(AutoRestartAfterDelay(2f));
-        }
-        
-        private IEnumerator AutoRestartAfterDelay(float delay)
-        {
-            yield return new WaitForSeconds(delay);
+            await UniTask.WaitForSeconds(RestartGameDelay, cancellationToken: this.GetCancellationTokenOnDestroy()).SuppressCancellationThrow();
             RestartGame();
         }
         

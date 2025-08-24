@@ -1158,7 +1158,7 @@ Canvas:
   m_GameObject: {fileID: 883167098}
   m_Enabled: 1
   serializedVersion: 3
-  m_RenderMode: 1
+  m_RenderMode: 0
   m_Camera: {fileID: 330585545}
   m_PlaneDistance: 100
   m_PixelPerfect: 0
@@ -1170,7 +1170,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 657744481
-  m_SortingOrder: 0
+  m_SortingOrder: 1
   m_TargetDisplay: 0
 --- !u!1 &1247728900
 GameObject:
@@ -1913,7 +1913,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5549903126209937218, guid: 7d0e26166422e4850962275d30053453, type: 3}
       propertyPath: moveDuration
-      value: 1
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 5549903126209937218, guid: 7d0e26166422e4850962275d30053453, type: 3}
       propertyPath: rotationDuration

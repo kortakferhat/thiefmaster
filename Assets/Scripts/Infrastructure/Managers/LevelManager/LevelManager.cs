@@ -203,7 +203,7 @@ namespace Infrastructure.Managers.LevelManager
         {
             Debug.Log($"[LevelManager] Player lost level {_currentLevel} at turn {loseEvent.TurnNumber}, reason: {loseEvent.Reason}");
             FailLevel();
-            _gameManager.LoseGame();
+            //_gameManager.LoseGame();
         }
 
         private void GenerateLevel()

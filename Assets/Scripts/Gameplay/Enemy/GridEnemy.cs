@@ -260,7 +260,7 @@ namespace Gameplay.Enemy
             // Check if player is in vision range (1 depth)
             if (IsPlayerInVision(playerNodeId))
             {
-                _gameManager.LoseGame();
+                //_gameManager.LoseGame();
                 EventBus.Publish(new LoseEvent(_turnManager.CurrentTurn, LoseReason.EnemyDetection, _currentNodeId));
                 return;
             }
