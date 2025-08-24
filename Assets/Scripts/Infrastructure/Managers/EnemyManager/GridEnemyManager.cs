@@ -7,7 +7,7 @@ using Gameplay.Graph;
 using Infrastructure.Managers.LevelManager;
 using Infrastructure.Managers.PoolManager;
 
-namespace TowerClicker.Infrastructure
+namespace Infrastructure
 {
     /// <summary>
     /// Manager for grid-based enemies in the puzzle game
@@ -20,7 +20,6 @@ namespace TowerClicker.Infrastructure
         private ILevelManager _levelManager;
         private IGameManager _gameManager;
         private IPoolManager _poolManager;
-        private bool _initialized = false;
         
         private readonly List<GridEnemy> _activeEnemies = new();
         
@@ -34,8 +33,6 @@ namespace TowerClicker.Infrastructure
             
             // Subscribe to level events to spawn enemies when level loads
             _levelManager.OnGridInstantiated += OnGridInstantiated;
-            
-            _initialized = true;
             
             if (showDebugLogs)
                 Debug.Log("[GridEnemyManager] Initialized");

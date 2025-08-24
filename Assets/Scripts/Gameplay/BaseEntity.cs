@@ -1,4 +1,4 @@
-using TowerClicker.Infrastructure;
+using Infrastructure;
 using UnityEngine;
 
 namespace Gameplay

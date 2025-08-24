@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Gameplay.Graph;
 using Gameplay.Events;
 using Infrastructure.Managers.PoolManager;
-using TowerClicker.Infrastructure;
 using Infrastructure;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -62,8 +61,7 @@ namespace Infrastructure.Managers.LevelManager
                 _gameManager = ServiceLocator.Get<IGameManager>();
                 
                 // Subscribe to events
-                EventBus.Subscribe<WinEvent>(OnPlayerWon);
-                EventBus.Subscribe<LoseEvent>(OnPlayerLost);
+                EventBus.Subscribe<GameEvents.GameStateChangeEvent>(OnGameStateChangeEvent);
                 
                 // Load first level
                 LoadLevel(1);
@@ -164,7 +162,7 @@ namespace Infrastructure.Managers.LevelManager
             GenerateLevel();
             
             // Reset game state
-            _gameManager.ResumeGame();
+            _gameManager.StartGame();
             
             // Reset turn manager
             ServiceLocator.Get<ITurnManager>()?.ResetForNewLevel();
@@ -191,19 +189,25 @@ namespace Infrastructure.Managers.LevelManager
         {
             OnLevelFailed?.Invoke();
         }
-
-        private void OnPlayerWon(WinEvent winEvent)
-        {
-            Debug.Log($"[LevelManager] Player won level {_currentLevel} at turn {winEvent.TurnNumber}");
-            CompleteLevel();
-            _gameManager.WinGame();
-        }
         
-        private void OnPlayerLost(LoseEvent loseEvent)
+        
+        private void OnGameStateChangeEvent(GameEvents.GameStateChangeEvent args)
         {
-            Debug.Log($"[LevelManager] Player lost level {_currentLevel} at turn {loseEvent.TurnNumber}, reason: {loseEvent.Reason}");
-            FailLevel();
-            //_gameManager.LoseGame();
+            if (args.CurrentState is GameState.Finish)
+            {
+                if (args.Reason == GameEvents.GameEventChangeReason.Win)
+                {
+                    CompleteLevel();
+                    _gameManager.WinGame();
+                    return;
+                }
+
+                if (args.Reason == GameEvents.GameEventChangeReason.Lose)
+                {
+                    FailLevel();
+                    return;
+                }
+            }
         }
 
         private void GenerateLevel()
@@ -507,8 +511,6 @@ namespace Infrastructure.Managers.LevelManager
 
         private void OnDestroy()
         {
-            EventBus.Unsubscribe<WinEvent>(OnPlayerWon);
-            EventBus.Unsubscribe<LoseEvent>(OnPlayerLost);
         }
 
         private string GetNodePoolKey(NodeType nodeType) => nodeType switch

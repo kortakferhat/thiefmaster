@@ -1,6 +1,6 @@
+using Infrastructure;
 using Infrastructure.Managers.LevelManager;
 using UnityEngine;
-using TowerClicker.Infrastructure;
 using NaughtyAttributes;
 
 namespace Gameplay.Graph

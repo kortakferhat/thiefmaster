@@ -1,7 +1,6 @@
-using System;
 using UnityEngine;
 
-namespace TowerClicker.Infrastructure
+namespace Infrastructure.Managers.PoolManager
 {
     public class ManagerBase : MonoBehaviour
     {

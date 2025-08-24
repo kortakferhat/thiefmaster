@@ -1,4 +1,3 @@
-using TowerClicker.Infrastructure;
 using UnityEngine;
 
 namespace Infrastructure.Managers.TooltipManager

@@ -27,6 +27,6 @@ namespace Gameplay.Enemy.Behaviours
             TryCatchPlayer(enemy); // Check after movement
         }
         
-        public string GetBehaviourName() => "MovingTarget";
+        public override string GetBehaviourName() => "MovingTarget";
     }
 }

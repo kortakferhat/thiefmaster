@@ -1,6 +1,5 @@
 using System;
 using Gameplay.Graph;
-using TowerClicker.Infrastructure;
 using UnityEngine;
 
 namespace Infrastructure.Managers.LevelManager

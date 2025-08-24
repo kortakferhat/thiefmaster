@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using Infrastructure.Managers;
 using Infrastructure.Managers.LevelManager;
-using TowerClicker.Infrastructure;
 
 namespace Infrastructure.Input
 {

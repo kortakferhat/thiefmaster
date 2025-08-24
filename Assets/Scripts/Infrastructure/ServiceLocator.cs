@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace TowerClicker.Infrastructure
+namespace Infrastructure
 {
     public interface IService { }
 

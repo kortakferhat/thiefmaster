@@ -1,5 +1,5 @@
 using DG.Tweening;
-using TowerClicker.Infrastructure;
+using Infrastructure;
 using UnityEngine;
 
 namespace Gameplay.Popups
@@ -35,7 +35,7 @@ namespace Gameplay.Popups
         {
             base.Hide();
             
-            _gameManager.ResumeGame();
+            _gameManager.StartGame();
         }
     }
 }

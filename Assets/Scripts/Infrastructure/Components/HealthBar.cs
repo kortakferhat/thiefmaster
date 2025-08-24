@@ -1,6 +1,5 @@
 using System;
-using TowerClicker.Infrastructure;
-using TowerClicker.Infrastructure.Managers.CameraManager;
+using Infrastructure.Managers.CameraManager;
 using UnityEngine;
 using UnityEngine.UI;
 

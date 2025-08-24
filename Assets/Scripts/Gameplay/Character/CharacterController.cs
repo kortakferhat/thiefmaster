@@ -3,20 +3,19 @@ using UnityEngine.InputSystem;
 using Gameplay.Graph;
 using Gameplay.Events;
 using Infrastructure.Managers.LevelManager;
-using TowerClicker.Infrastructure;
 using Infrastructure;
 using DG.Tweening;
 
 namespace Gameplay.Character
 {
-    public enum CharacterState : byte
+    public enum CharacterState : int
     {
+        Dead = -1,
         Idle = 0,
-        Moving = 1,
+        Walk = 1,
         Attacking = 2,
         Defending = 3,
         Win = 4,
-        Dead = 5
     }
     
     public class CharacterController : BaseEntity
@@ -46,8 +45,6 @@ namespace Gameplay.Character
         private ITurnManager _turnManager;
         private Tween _currentMoveTween;
         private CharacterState _currentState = CharacterState.Idle;
-        
-        private static readonly int State = Animator.StringToHash("State");
         
         public override void Initialize()
         {
@@ -131,7 +128,7 @@ namespace Gameplay.Character
         
         private void OnMovementInputPerformed(InputAction.CallbackContext context)
         {
-            if (_currentState is CharacterState.Moving) return;
+            if (_currentState is not CharacterState.Idle) return;
             if (_turnManager.IsTurnInProgress) return; // Prevent input during turn processing
             if (_gameManager.State != GameState.Game)  return;
             
@@ -161,7 +158,7 @@ namespace Gameplay.Character
                     if (shouldLost)
                     {
                         Debug.Log($"[CharacterController] Cannot move to {targetNodeId} - Enemy occupied!");
-                        EventBus.Publish(new LoseEvent(_turnManager.CurrentTurn, LoseReason.EnemyContact, targetNodeId));
+                        _gameManager.LoseGame();
                         return;
                     }
                 }
@@ -211,7 +208,7 @@ namespace Gameplay.Character
                 _currentMoveTween.Kill(true);
             }
             
-            SetCurrentState(CharacterState.Moving);
+            SetCurrentState(CharacterState.Walk);
             var targetPos = _levelManager.GetNodeActualWorldPosition(_currentNodeId);
             var targetRotation = GetRotationFromDirection(direction);
             
@@ -248,7 +245,8 @@ namespace Gameplay.Character
             if (goalNode != null && _currentNodeId == goalNode.Id)
             {
                 Debug.Log($"[CharacterController] Player reached goal node {_currentNodeId} - Level Complete!");
-                EventBus.Publish(new WinEvent(_turnManager.CurrentTurn, _currentNodeId));
+                _gameManager.WinGame();
+                //EventBus.Publish(new WinEvent(_turnManager.CurrentTurn, _currentNodeId));
                 
                 // Notify LevelManager
                 _levelManager.CompleteLevel();
@@ -279,6 +277,13 @@ namespace Gameplay.Character
             
             _levelManager.OnLevelLoaded -= OnLevelLoaded;
             _levelManager.OnGridInstantiated -= OnGridInstantiated;
+            
+            EventBus.Unsubscribe<GameEvents.GameStateChangeEvent>(OnGameStateChangeEvent);
+        }
+
+        private void OnGameStateChangeEvent(GameEvents.GameStateChangeEvent args)
+        {
+            SetCurrentState(CharacterState.Dead);
         }
 
         private void SetCurrentState(CharacterState newState)
@@ -294,7 +299,8 @@ namespace Gameplay.Character
 
         private void SetAnimationState(CharacterState state)
         {
-            animator.SetInteger(State, (int)state);
+            var stateName = state.ToString().ToLower();
+            animator.SetTrigger(stateName);
         }
     }
 }

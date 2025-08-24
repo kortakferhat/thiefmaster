@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace TowerClicker.Infrastructure
+namespace Infrastructure
 {
     public interface IEnemyManager : IService
     {

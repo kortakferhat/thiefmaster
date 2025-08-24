@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using TowerClicker.Infrastructure;
 using UnityEngine;
 
 namespace Infrastructure.Managers

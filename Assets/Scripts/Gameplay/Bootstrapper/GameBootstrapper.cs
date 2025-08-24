@@ -1,13 +1,13 @@
-using Gameplay.Character;
-using Gameplay.Graph;
+using Infrastructure;
 using Infrastructure.Components;
 using Infrastructure.Managers;
 using Infrastructure.Managers.EconomyManager;
 using Infrastructure.Managers.LevelManager;
 using Infrastructure.Managers.TooltipManager;
 using Infrastructure.Input;
-using TowerClicker.Infrastructure;
-using TowerClicker.Infrastructure.Managers.CameraManager;
+using Infrastructure.Managers.CameraManager;
+using Infrastructure.Managers.GameManager;
+using Infrastructure.Managers.TurnManager;
 using UnityEngine;
 
 namespace Gameplay.Bootstrapper

@@ -4,10 +4,11 @@ using UnityEngine;
 using System.Collections;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
+using Infrastructure;
 using Infrastructure.Managers;
 using UnityEngine.AddressableAssets;
 
-namespace TowerClicker.Infrastructure
+namespace Infrastructure
 {
     public class PoolManager : MonoBehaviour, IPoolManager
     {

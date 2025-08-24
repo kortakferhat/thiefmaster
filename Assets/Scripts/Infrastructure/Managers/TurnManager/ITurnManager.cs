@@ -1,6 +1,6 @@
 using System;
 
-namespace TowerClicker.Infrastructure
+namespace Infrastructure
 {
     public interface ITurnManager : IService
     {

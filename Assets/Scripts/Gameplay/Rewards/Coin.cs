@@ -3,7 +3,6 @@ using DG.Tweening;
 using Gameplay.Events;
 using Infrastructure;
 using Infrastructure.Managers.PoolManager;
-using TowerClicker.Infrastructure;
 using UnityEngine;
 
 namespace Gameplay.Rewards

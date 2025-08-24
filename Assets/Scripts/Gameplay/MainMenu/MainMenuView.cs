@@ -1,7 +1,7 @@
 using Cysharp.Threading.Tasks;
 using Gameplay.MVP;
+using Infrastructure;
 using TMPro;
-using TowerClicker.Infrastructure;
 using UnityEngine;
 
 namespace Gameplay.MainMenu
@@ -35,7 +35,7 @@ namespace Gameplay.MainMenu
             pauseText.gameObject.SetActive(false);
         }
 
-        public async void ShowGameOverText()
+        private void ShowGameOverText()
         {
             gameOverText.gameObject.SetActive(true);
         }

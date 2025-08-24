@@ -6,7 +6,6 @@ using Infrastructure;
 using DG.Tweening;
 using Gameplay.Character;
 using Infrastructure.Managers;
-using TowerClicker.Infrastructure;
 using Gameplay.Enemy.Behaviours;
 
 namespace Gameplay.Enemy
@@ -58,7 +57,7 @@ namespace Gameplay.Enemy
             SetAnimationState(_currentState);
 
             if (showDebugLogs)
-                Debug.Log($"[CharacterController] State changed to {_currentState}");
+                Debug.Log($"[GridEnemy] State changed to {_currentState}");
         }
 
         private void SetAnimationState(CharacterState state)
@@ -120,7 +119,7 @@ namespace Gameplay.Enemy
         /// </summary>
         public void MoveToNode(Vector2Int newNodeId)
         {
-            if (_currentState is CharacterState.Moving) 
+            if (_currentState is CharacterState.Walk) 
             {
                 if (showDebugLogs)
                     Debug.Log($"[GridEnemy] Already moving, ignoring move request to {newNodeId}");
@@ -142,15 +141,15 @@ namespace Gameplay.Enemy
             var targetPos = _levelManager.GetNodeActualWorldPosition(newNodeId);
             var targetRotation = GetRotationFromDirection(moveDirection);
             
-            SetCurrentState(CharacterState.Moving);
+            SetCurrentState(CharacterState.Walk);
             SetAnimationState(CharacterState.Idle);
             _currentNodeId = newNodeId;
 
             // Create delay tween first, then animate movement
             _currentMoveTween = DOVirtual.DelayedCall(moveDelay, () => {
                 // Check if still moving (not interrupted)
-                if (_currentState != CharacterState.Moving) return;
-                SetAnimationState(CharacterState.Moving);
+                if (_currentState != CharacterState.Walk) return;
+                SetAnimationState(CharacterState.Walk);
 
                 // Animate movement and rotation
                 DOTween.Sequence()
@@ -260,8 +259,8 @@ namespace Gameplay.Enemy
             // Check if player is in vision range (1 depth)
             if (IsPlayerInVision(playerNodeId))
             {
-                //_gameManager.LoseGame();
-                EventBus.Publish(new LoseEvent(_turnManager.CurrentTurn, LoseReason.EnemyDetection, _currentNodeId));
+                _gameManager.LoseGame();
+                //EventBus.Publish(new LoseEvent(_turnManager.CurrentTurn, LoseReason.EnemyDetection, _currentNodeId));
                 return;
             }
         }

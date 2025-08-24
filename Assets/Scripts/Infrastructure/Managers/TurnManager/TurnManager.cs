@@ -1,9 +1,7 @@
-using System;
-using UnityEngine;
 using Gameplay.Events;
-using Infrastructure;
+using UnityEngine;
 
-namespace TowerClicker.Infrastructure
+namespace Infrastructure.Managers.TurnManager
 {
     public class TurnManager : ITurnManager
     {

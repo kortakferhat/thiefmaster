@@ -4,7 +4,7 @@ using UnityEngine;
 using Gameplay.Enemy;
 using Infrastructure.Managers.LevelManager;
 
-namespace TowerClicker.Infrastructure
+namespace Infrastructure
 {
     public interface IGridEnemyManager : IService
     {

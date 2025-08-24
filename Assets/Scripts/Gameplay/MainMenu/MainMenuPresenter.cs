@@ -6,7 +6,6 @@ using Gameplay.Popups;
 using Infrastructure;
 using Infrastructure.Managers;
 using Infrastructure.Managers.EconomyManager;
-using TowerClicker.Infrastructure;
 
 namespace Gameplay.Views
 {

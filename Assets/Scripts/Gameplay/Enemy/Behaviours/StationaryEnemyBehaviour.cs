@@ -19,6 +19,6 @@ namespace Gameplay.Enemy.Behaviours
             }
         }
         
-        public string GetBehaviourName() => "Stationary";
+        public override string GetBehaviourName() => "Stationary";
     }
 }

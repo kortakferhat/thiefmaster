@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace TowerClicker.Infrastructure.Managers.CameraManager
+namespace Infrastructure.Managers.CameraManager
 {
     public interface ICameraManager : IService
     {

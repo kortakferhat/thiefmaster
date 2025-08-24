@@ -34,7 +34,8 @@ namespace Gameplay.Enemy.Behaviours
                     if (enemy.IsPlayerAtNode(targetNode))
                     {
                         enemy.MoveToNode(targetNode);
-                        EventBus.Publish(new LoseEvent(enemy.TurnManager.CurrentTurn, LoseReason.EnemyContact, targetNode));
+                        ServiceLocator.Get<IGameManager>().LoseGame();
+                        //EventBus.Publish(new LoseEvent(enemy.TurnManager.CurrentTurn, LoseReason.EnemyContact, targetNode));
                         return true;
                     }
                     

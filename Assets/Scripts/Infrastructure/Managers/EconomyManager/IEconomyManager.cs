@@ -1,5 +1,3 @@
-using TowerClicker.Infrastructure;
-
 namespace Infrastructure.Managers.EconomyManager
 {
     public interface IEconomyManager : IService

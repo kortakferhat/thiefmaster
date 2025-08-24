@@ -1,5 +1,4 @@
 using Infrastructure.Managers.PoolManager;
-using TowerClicker.Infrastructure;
 using UnityEngine;
 
 namespace Infrastructure.Managers.TooltipManager

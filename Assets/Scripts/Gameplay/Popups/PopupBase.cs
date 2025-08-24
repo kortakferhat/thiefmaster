@@ -1,8 +1,7 @@
-using System;
 using DG.Tweening;
+using Infrastructure;
 using Infrastructure.Managers;
-using TowerClicker.Infrastructure;
-using TowerClicker.Infrastructure.Managers.CameraManager;
+using Infrastructure.Managers.CameraManager;
 using UnityEngine;
 using UnityEngine.UI;
 

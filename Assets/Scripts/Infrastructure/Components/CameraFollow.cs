@@ -1,9 +1,8 @@
 using System;
 using Gameplay;
 using UnityEngine;
-using TowerClicker.Infrastructure;
-using TowerClicker.Infrastructure.Managers.CameraManager;
 using Gameplay.Character;
+using Infrastructure.Managers.CameraManager;
 
 namespace Infrastructure.Components
 {

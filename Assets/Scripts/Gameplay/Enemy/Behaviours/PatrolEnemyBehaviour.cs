@@ -48,6 +48,6 @@ namespace Gameplay.Enemy.Behaviours
             }
         }
         
-        public string GetBehaviourName() => "Patrol";
+        public override string GetBehaviourName() => "Patrol";
     }
 }
