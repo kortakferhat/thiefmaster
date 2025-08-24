@@ -150,11 +150,20 @@ namespace Gameplay.Character
             {
                 // Check if target node is occupied by enemy
                 var enemyManager = ServiceLocator.Get<IGridEnemyManager>();
+                
                 if (enemyManager != null && enemyManager.IsNodeOccupiedByEnemy(targetNodeId))
                 {
-                    Debug.Log($"[CharacterController] Cannot move to {targetNodeId} - Enemy occupied!");
-                    EventBus.Publish(new LoseEvent(_turnManager.CurrentTurn, LoseReason.EnemyContact, targetNodeId));
-                    return;
+                    var enemy = enemyManager.GetEnemyAtNode(targetNodeId);
+                    var enemyDirection = enemy.FacingDirection;
+                    var characterDirection = direction;
+                    var shouldLost = enemyDirection == -characterDirection;
+
+                    if (shouldLost)
+                    {
+                        Debug.Log($"[CharacterController] Cannot move to {targetNodeId} - Enemy occupied!");
+                        EventBus.Publish(new LoseEvent(_turnManager.CurrentTurn, LoseReason.EnemyContact, targetNodeId));
+                        return;
+                    }
                 }
                 
                 var previousNodeId = _currentNodeId;
