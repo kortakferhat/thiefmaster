@@ -39,6 +39,9 @@ namespace Gameplay.Character
         [Header("Debug")]
         [SerializeField] private bool showDebugLogs = true;
         
+        [Header("Input Components")]
+        [SerializeField] private Infrastructure.Input.SwipeInputHandler swipeInputHandler;
+        
         private InputSystem_Actions _playerInputActions;
         private Vector2Int _currentNodeId;
         private ILevelManager _levelManager;
@@ -63,9 +66,22 @@ namespace Gameplay.Character
         
         private void InitializeInputSystem()
         {
+            // Initialize Unity Input System
             _playerInputActions = new InputSystem_Actions();
             _playerInputActions.Player.Move.performed += OnMovementInputPerformed;
             _playerInputActions.Player.Enable();
+            
+            // Initialize Swipe Input Handler
+            if (swipeInputHandler != null)
+            {
+                swipeInputHandler.OnSwipeDetected.AddListener(OnSwipeDetected);
+                if (showDebugLogs)
+                    Debug.Log("[CharacterController] Swipe input handler initialized");
+            }
+            else
+            {
+                Debug.LogWarning("[CharacterController] SwipeInputHandler component not assigned!");
+            }
         }
         
         private void OnGridInstantiated(Graph.Graph graph)
@@ -143,6 +159,23 @@ namespace Gameplay.Character
             }
         }
         
+        private void OnSwipeDetected(Infrastructure.Input.SwipeDirection swipeDirection)
+        {
+            if (_currentState is not CharacterState.Idle) return;
+            if (_turnManager.IsTurnInProgress) return; // Prevent input during turn processing
+            if (_gameManager.State != GameState.Game) return;
+            
+            var direction = GetDirectionFromSwipe(swipeDirection);
+            
+            if (direction != Vector2Int.zero)
+            {
+                if (showDebugLogs)
+                    Debug.Log($"[CharacterController] Swipe detected: {swipeDirection} -> Direction: {direction}");
+                    
+                TryMoveToNode(direction);
+            }
+        }
+        
         private void TryMoveToNode(Vector2Int direction)
         {
             if (_levelManager.TryMoveToNode(_currentNodeId, direction, out Vector2Int targetNodeId))
@@ -185,6 +218,23 @@ namespace Gameplay.Character
             else
             {
                 return input.y > 0 ? Vector2Int.up : Vector2Int.down;
+            }
+        }
+        
+        private Vector2Int GetDirectionFromSwipe(Infrastructure.Input.SwipeDirection swipeDirection)
+        {
+            switch (swipeDirection)
+            {
+                case Infrastructure.Input.SwipeDirection.Up:
+                    return Vector2Int.up;
+                case Infrastructure.Input.SwipeDirection.Down:
+                    return Vector2Int.down;
+                case Infrastructure.Input.SwipeDirection.Left:
+                    return Vector2Int.left;
+                case Infrastructure.Input.SwipeDirection.Right:
+                    return Vector2Int.right;
+                default:
+                    return Vector2Int.zero;
             }
         }
         
@@ -280,9 +330,19 @@ namespace Gameplay.Character
             // Kill all tweens on this transform to be safe
             characterTransform.DOKill();
             
-            _playerInputActions.Player.Move.performed -= OnMovementInputPerformed;
-            _playerInputActions.Player.Disable();
-            _playerInputActions.Dispose();
+            // Clean up input systems
+            if (_playerInputActions != null)
+            {
+                _playerInputActions.Player.Move.performed -= OnMovementInputPerformed;
+                _playerInputActions.Player.Disable();
+                _playerInputActions.Dispose();
+            }
+            
+            // Clean up swipe input handler
+            if (swipeInputHandler != null)
+            {
+                swipeInputHandler.OnSwipeDetected.RemoveListener(OnSwipeDetected);
+            }
             
             _levelManager.OnLevelLoaded -= OnLevelLoaded;
             _levelManager.OnGridInstantiated -= OnGridInstantiated;

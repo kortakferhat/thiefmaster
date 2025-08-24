@@ -1264,7 +1264,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 5549903126209937218, guid: 7d0e26166422e4850962275d30053453, type: 3}
   m_PrefabInstance: {fileID: 6054550463891203119}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 1720938546}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0d246aa60c16940d7b6a6b3a70f7d31f, type: 3}
@@ -2257,6 +2257,62 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1642341988}
   m_CullTransparentMesh: 1
+--- !u!1 &1720938546 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3715467290157761603, guid: 7d0e26166422e4850962275d30053453, type: 3}
+  m_PrefabInstance: {fileID: 6054550463891203119}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1720938547
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1720938546}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bdcd3af7f1b7e4a379599f1665888760, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  swipeResistance: 100
+  enableDebugLogs: 0
+  OnSwipeDetected:
+    m_PersistentCalls:
+      m_Calls: []
+  position:
+    m_Name: Position
+    m_Type: 0
+    m_ExpectedControlType: Vector2
+    m_Id: 3a039198-5666-40b6-a04a-79070ff5d7f8
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 09a52ca6-3434-4c40-bcb8-9d045dcdf0a9
+      m_Path: <Touchscreen>/position
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Position
+      m_Flags: 0
+    m_Flags: 0
+  press:
+    m_Name: Press
+    m_Type: 1
+    m_ExpectedControlType: Button
+    m_Id: 3bca88ad-fed3-445a-a9ef-3dd9c2202c2d
+    m_Processors: 
+    m_Interactions: Press
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 1e862e53-2835-41db-b2cd-aa698d06b4ca
+      m_Path: <Touchscreen>/Press
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Press
+      m_Flags: 0
+    m_Flags: 0
 --- !u!1 &1761801480
 GameObject:
   m_ObjectHideFlags: 0
@@ -3144,6 +3200,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1251165058}
     m_Modifications:
+    - target: {fileID: 791027261256542232, guid: 7d0e26166422e4850962275d30053453, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 791027261256542232, guid: 7d0e26166422e4850962275d30053453, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 791027261256542232, guid: 7d0e26166422e4850962275d30053453, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
     - target: {fileID: 3715467290157761603, guid: 7d0e26166422e4850962275d30053453, type: 3}
       propertyPath: m_Name
       value: Character
@@ -3188,10 +3256,17 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5549903126209937218, guid: 7d0e26166422e4850962275d30053453, type: 3}
+      propertyPath: swipeInputHandler
+      value: 
+      objectReference: {fileID: 1720938547}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3715467290157761603, guid: 7d0e26166422e4850962275d30053453, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1720938547}
   m_SourcePrefab: {fileID: 100100000, guid: 7d0e26166422e4850962275d30053453, type: 3}
 --- !u!224 &6965949524977639970 stripped
 RectTransform:

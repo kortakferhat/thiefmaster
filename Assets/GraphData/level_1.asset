@@ -47,7 +47,7 @@ MonoBehaviour:
       enemyFacingDirection: {x: 0, y: 0}
       enemyBehaviourType: 
     - id: {x: 2, y: -3}
-      type: 0
+      type: 6
       isDestroyed: 0
       enemyFacingDirection: {x: 0, y: -1}
       enemyBehaviourType: Patrol
