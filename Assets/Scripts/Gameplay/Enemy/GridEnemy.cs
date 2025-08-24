@@ -47,7 +47,6 @@ namespace Gameplay.Enemy
         #region Animation States // TODO: Refactor
         
         private CharacterState _currentState = CharacterState.Idle;
-        private static readonly int State = Animator.StringToHash("State");
 
         private void SetCurrentState(CharacterState newState)
         {
@@ -62,7 +61,8 @@ namespace Gameplay.Enemy
 
         private void SetAnimationState(CharacterState state)
         {
-            animator.SetInteger(State, (int)state);
+            var stateName = state.ToString().ToLower();
+            animator.SetTrigger(stateName);
         }
         
         #endregion

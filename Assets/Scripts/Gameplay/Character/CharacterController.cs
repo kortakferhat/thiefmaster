@@ -56,6 +56,8 @@ namespace Gameplay.Character
             _levelManager.OnLevelLoaded += OnLevelLoaded;
             _levelManager.OnGridInstantiated += OnGridInstantiated;
             
+            EventBus.Subscribe<GameEvents.GameStateChangeEvent>(OnGameStateChangeEvent);
+            
             InitializeInputSystem();
         }
         
@@ -283,7 +285,13 @@ namespace Gameplay.Character
 
         private void OnGameStateChangeEvent(GameEvents.GameStateChangeEvent args)
         {
-            SetCurrentState(CharacterState.Dead);
+            if (args.CurrentState == GameState.Finish)
+            {
+                if (args.Reason == GameEvents.GameEventChangeReason.Lose)
+                {
+                    SetCurrentState(CharacterState.Dead);
+                }
+            }
         }
 
         private void SetCurrentState(CharacterState newState)
