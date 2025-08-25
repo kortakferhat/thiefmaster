@@ -52,9 +52,13 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 0cbd184ca6df04fd49710437d27bd857, type: 2}
+    - target: {fileID: 1933930902713278280, guid: 230acf50ce8184fdeab35a85d57ddd6b, type: 3}
+      propertyPath: poolTag
+      value: StartNode
+      objectReference: {fileID: 0}
     - target: {fileID: 4136262835402645569, guid: 230acf50ce8184fdeab35a85d57ddd6b, type: 3}
       propertyPath: m_Name
-      value: StartNode Variant
+      value: StartNode
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

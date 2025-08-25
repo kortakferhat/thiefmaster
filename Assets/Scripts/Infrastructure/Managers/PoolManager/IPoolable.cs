@@ -5,6 +5,7 @@ namespace Infrastructure.Managers
     /// </summary>
     public interface IPoolable
     {
+        string PoolTag { get; }
         void OnSpawnFromPool();
         void OnDespawn();
     }

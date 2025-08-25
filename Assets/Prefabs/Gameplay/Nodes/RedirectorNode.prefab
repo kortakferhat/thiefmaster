@@ -12,6 +12,10 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: e7b7851d6ebbe45a29a9c9759da54810, type: 2}
+    - target: {fileID: 754637981780362096, guid: 4952a7079457d45b2a0cc12bb78e9f06, type: 3}
+      propertyPath: poolTag
+      value: RedirectorNode
+      objectReference: {fileID: 0}
     - target: {fileID: 1404005245989266289, guid: 4952a7079457d45b2a0cc12bb78e9f06, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -54,10 +58,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3011014746921663609, guid: 4952a7079457d45b2a0cc12bb78e9f06, type: 3}
       propertyPath: m_Name
-      value: RedirectorNode Variant
+      value: RedirectorNode
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 6743345292084856000, guid: 4952a7079457d45b2a0cc12bb78e9f06, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4952a7079457d45b2a0cc12bb78e9f06, type: 3}

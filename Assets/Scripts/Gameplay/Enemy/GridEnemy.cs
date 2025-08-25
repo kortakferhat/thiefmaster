@@ -345,7 +345,9 @@ namespace Gameplay.Enemy
         }
         
         #region IPoolable Implementation
-        
+
+        public string PoolTag { get; set; }
+
         public void OnSpawnFromPool()
         {
             if (showDebugLogs)

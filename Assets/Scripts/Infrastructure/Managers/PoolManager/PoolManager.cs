@@ -84,6 +84,8 @@ namespace Infrastructure
         
         public GameObject Spawn(string tag, Vector3 position, Quaternion rotation)
         {
+            Debug.Log($"POOLTEST | Spawn: tag: {tag}");
+
             // Check if the pool exists
             if (!poolDictionary.TryGetValue(tag, out var pool))
             {
@@ -238,6 +240,7 @@ namespace Infrastructure
         
         public bool Despawn(string tag, GameObject obj)
         {
+            Debug.Log($"POOLTEST | DESPAWN: tag: {tag} | {obj.name}");
             // Check if the pool exists
             if (!poolDictionary.ContainsKey(tag))
             {

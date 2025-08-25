@@ -10,12 +10,16 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 5692061294566704056, guid: 29d5a89e1d16c417891745e567fc9e76, type: 3}
       propertyPath: m_Name
-      value: TrapNode Variant
+      value: TrapNode
       objectReference: {fileID: 0}
     - target: {fileID: 7446450771919775123, guid: 29d5a89e1d16c417891745e567fc9e76, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: d27a5365e42ad45ee8fe22efba2abfdd, type: 2}
+    - target: {fileID: 7876238693090278577, guid: 29d5a89e1d16c417891745e567fc9e76, type: 3}
+      propertyPath: poolTag
+      value: TrapNode
+      objectReference: {fileID: 0}
     - target: {fileID: 8379792864705895600, guid: 29d5a89e1d16c417891745e567fc9e76, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

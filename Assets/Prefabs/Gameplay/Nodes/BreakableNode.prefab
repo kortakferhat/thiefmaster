@@ -48,16 +48,23 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6040850279470412941, guid: 1a7802de21bfe4441883ae506526afcf, type: 3}
+      propertyPath: poolTag
+      value: BreakableNode
+      objectReference: {fileID: 0}
     - target: {fileID: 6470678193228754351, guid: 1a7802de21bfe4441883ae506526afcf, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: f5c4a510f2b6f40608e4e2468c322722, type: 2}
     - target: {fileID: 8098931836330445700, guid: 1a7802de21bfe4441883ae506526afcf, type: 3}
       propertyPath: m_Name
-      value: BreakableNode Variant
+      value: BreakableNode
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 7297320823193985389, guid: 1a7802de21bfe4441883ae506526afcf, type: 3}
+    - {fileID: 5097876232716133811, guid: 1a7802de21bfe4441883ae506526afcf, type: 3}
+    - {fileID: 6006915694431970839, guid: 1a7802de21bfe4441883ae506526afcf, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1a7802de21bfe4441883ae506526afcf, type: 3}

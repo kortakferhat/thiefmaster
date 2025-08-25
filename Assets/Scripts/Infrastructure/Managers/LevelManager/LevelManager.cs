@@ -8,6 +8,7 @@ using Infrastructure;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using Cysharp.Threading.Tasks;
+using Gameplay.Visual;
 
 namespace Infrastructure.Managers.LevelManager
 {
@@ -31,7 +32,7 @@ namespace Infrastructure.Managers.LevelManager
         private Transform _edgesParent;
         
         // Spawned objects
-        private readonly List<GameObject> _spawnedNodes = new();
+        private readonly List<NodeVisual> _spawnedNodes = new();
         private readonly List<GameObject> _spawnedEdges = new();
         private readonly Dictionary<Vector2Int, GameObject> _nodeObjects = new();
         
@@ -264,13 +265,14 @@ namespace Infrastructure.Managers.LevelManager
                     continue;
                 }
                 
+                var visual = nodeObj.GetComponent<NodeVisual>();
                 nodeObj.name = $"{nodeData.type}Node_({nodeData.id.x},{nodeData.id.y})";
                 
                 // Add gizmo
                 var nodeGizmo = nodeObj.AddComponent<Gameplay.Graph.NodeGizmo>();
                 nodeGizmo.Initialize(nodeData.id, nodeData.type);
                 
-                _spawnedNodes.Add(nodeObj);
+                _spawnedNodes.Add(visual);
                 _nodeObjects[nodeData.id] = nodeObj;
             }
         }
@@ -428,18 +430,12 @@ namespace Infrastructure.Managers.LevelManager
             _nodeObjects.Clear();
         }
 
-        private void TryDespawnNode(GameObject node)
+        private void TryDespawnNode(NodeVisual node)
         {
             if (node == null) return;
             
             // Try to despawn with different types
-            var despawned = _poolManager.Despawn(PoolKeys.BaseNode, node) ||
-                           _poolManager.Despawn(PoolKeys.StartNode, node) ||
-                           _poolManager.Despawn(PoolKeys.GoalNode, node) ||
-                           _poolManager.Despawn(PoolKeys.BreakableNode, node) ||
-                           _poolManager.Despawn(PoolKeys.RedirectorNode, node) ||
-                           _poolManager.Despawn(PoolKeys.TrapNode, node) ||
-                           _poolManager.Despawn(PoolKeys.Enemy, node);
+            var despawned = _poolManager.Despawn(node.PoolTag, node.gameObject);
             
             if (!despawned)
             {
