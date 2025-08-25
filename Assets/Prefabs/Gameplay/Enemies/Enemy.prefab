@@ -140,6 +140,7 @@ MonoBehaviour:
   moveDelay: 0
   moveEase: 3
   showDebugLogs: 1
+  _poolTag: Enemy
 --- !u!1 &7348794867881312380
 GameObject:
   m_ObjectHideFlags: 0

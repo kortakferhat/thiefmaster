@@ -171,7 +171,7 @@ namespace Infrastructure
             _activeEnemies.Remove(enemy);
             
             // Return enemy to pool
-            _poolManager.Despawn(PoolKeys.Enemy, enemy.gameObject);
+            _poolManager.Despawn(enemy.PoolTag, enemy.gameObject);
             
             if (showDebugLogs)
                 Debug.Log($"[GridEnemyManager] Removed enemy at {enemy.CurrentNodeId}");

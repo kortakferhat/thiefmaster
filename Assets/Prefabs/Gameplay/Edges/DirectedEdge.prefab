@@ -48,13 +48,17 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4613740492040156137, guid: 002ac4afb635e40e196e20bfd3b692f6, type: 3}
+      propertyPath: poolTag
+      value: DirectedEdge
+      objectReference: {fileID: 0}
     - target: {fileID: 6000428074539162551, guid: 002ac4afb635e40e196e20bfd3b692f6, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 80e92d6a5726c43fbb3f3b4f13f384ff, type: 2}
     - target: {fileID: 9111183773396360677, guid: 002ac4afb635e40e196e20bfd3b692f6, type: 3}
       propertyPath: m_Name
-      value: DirectedEdge Variant
+      value: DirectedEdge
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

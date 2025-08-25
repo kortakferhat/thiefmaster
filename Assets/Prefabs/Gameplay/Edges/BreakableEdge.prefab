@@ -52,9 +52,13 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: f5c4a510f2b6f40608e4e2468c322722, type: 2}
+    - target: {fileID: 6065434003863233153, guid: d7d53f79a78f0446fb2913147a4f898d, type: 3}
+      propertyPath: poolTag
+      value: BreakableEdge
+      objectReference: {fileID: 0}
     - target: {fileID: 7663685935667842189, guid: d7d53f79a78f0446fb2913147a4f898d, type: 3}
       propertyPath: m_Name
-      value: BreakableEdge Variant
+      value: BreakableEdge
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

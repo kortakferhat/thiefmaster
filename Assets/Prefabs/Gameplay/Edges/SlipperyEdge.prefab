@@ -52,9 +52,13 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 935a523be56aa408485a51d7bca12af9, type: 2}
+    - target: {fileID: 6287586702109408948, guid: 5298a54c0b423460b95e75719b1e1fce, type: 3}
+      propertyPath: poolTag
+      value: SlipperyEdge
+      objectReference: {fileID: 0}
     - target: {fileID: 7581773812824740024, guid: 5298a54c0b423460b95e75719b1e1fce, type: 3}
       propertyPath: m_Name
-      value: SlipperyEdge Variant
+      value: SlipperyEdge
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
