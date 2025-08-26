@@ -43,7 +43,7 @@ namespace Gameplay.Views
 
         private void OnGameStateChange(GameEvents.GameStateChangeEvent args)
         {
-            _view.PrepareGameStateChange(args.CurrentState);
+            _view.PrepareGameStateChange(args);
         }
 
         private void OnTurnCompleted(TurnCompletedEvent args)

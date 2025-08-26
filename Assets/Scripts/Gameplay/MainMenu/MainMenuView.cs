@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using Gameplay.Events;
 using Gameplay.MVP;
 using Infrastructure;
 using TMPro;
@@ -9,13 +10,9 @@ namespace Gameplay.MainMenu
     public class MainMenuView : MonoBehaviour, IView
     {
         [SerializeField] private TextMeshProUGUI remainingMovesText;
+        [SerializeField] private TextMeshProUGUI winText;
         [SerializeField] private TextMeshProUGUI gameOverText;
         [SerializeField] private TextMeshProUGUI pauseText;
-        
-        private void Awake()
-        {
-            //towerPopupButton.onClick.AddListener(() => OnTowerPopupButtonClicked?.Invoke());
-        }
         
         public void SetRemainingMovesText(int remainingMoves)
         {
@@ -39,6 +36,16 @@ namespace Gameplay.MainMenu
         {
             gameOverText.gameObject.SetActive(true);
         }
+        
+        private void ShowWinText()
+        {
+            winText.gameObject.SetActive(true);
+        }
+        
+        private void HideWinText()
+        {
+            winText.gameObject.SetActive(true);
+        }
 
         public void HideGameOverText()
         {
@@ -49,26 +56,36 @@ namespace Gameplay.MainMenu
         {
             HidePauseText();
             HideGameOverText();
+            HideWinText();
         }
 
-        public void PrepareGameStateChange(GameState argsCurrentState)
+        public void PrepareGameStateChange(GameEvents.GameStateChangeEvent args)
         {
             HideAllTexts();
-            
-            if (argsCurrentState == GameState.Game)
+            var currentState = args.CurrentState;
+            if (currentState == GameState.Game)
             {
                 return;
             }
             
-            if (argsCurrentState == GameState.Pause)
+            if (currentState == GameState.Pause)
             {
                 ShowPauseText();
                 return;
             }
 
-            if (argsCurrentState == GameState.Finish)
+            if (currentState == GameState.Finish)
             {
-                ShowGameOverText();
+                var reason = args.Reason;
+                if (reason == GameEvents.GameEventChangeReason.Win)
+                {
+                    ShowWinText();
+                }
+                else if (reason == GameEvents.GameEventChangeReason.Lose)
+                {
+                    ShowGameOverText();
+                }
+
                 return;
             }
         }
