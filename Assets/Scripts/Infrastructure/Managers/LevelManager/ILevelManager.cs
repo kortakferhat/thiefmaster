@@ -11,16 +11,13 @@ namespace Infrastructure.Managers.LevelManager
         
         event Action<int> OnLevelChanged;
         event Action<GraphScriptableObject> OnLevelLoaded;
-        event Action OnLevelCompleted;
-        event Action OnLevelFailed;
-        event Action<Graph> OnGridGenerated;
         event Action<Graph> OnGridInstantiated;
         
         System.Threading.Tasks.Task Initialize();
         void LoadLevel(int levelIndex);
         void LoadLevel(GraphScriptableObject levelGraph);
-        void CompleteLevel();
-        void FailLevel();
+        void OnLevelCompleted();
+        void OnLevelFailed();
         void RestartLevel();
         void NextLevel();
         void SetGridConfig(GridConfig config);

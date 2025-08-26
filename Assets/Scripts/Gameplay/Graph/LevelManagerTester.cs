@@ -25,8 +25,6 @@ namespace Gameplay.Graph
             {
                 _levelManager.OnLevelChanged += OnLevelChanged;
                 _levelManager.OnLevelLoaded += OnLevelLoaded;
-                _levelManager.OnLevelCompleted += OnLevelCompleted;
-                _levelManager.OnLevelFailed += OnLevelFailed;
             }
             else
             {
@@ -40,8 +38,6 @@ namespace Gameplay.Graph
             {
                 _levelManager.OnLevelChanged -= OnLevelChanged;
                 _levelManager.OnLevelLoaded -= OnLevelLoaded;
-                _levelManager.OnLevelCompleted -= OnLevelCompleted;
-                _levelManager.OnLevelFailed -= OnLevelFailed;
             }
         }
         
@@ -102,14 +98,14 @@ namespace Gameplay.Graph
         public void CompleteCurrentLevel()
         {
             Debug.Log("Completing current level...");
-            _levelManager?.CompleteLevel();
+            _levelManager?.OnLevelCompleted();
         }
         
         [Button("Fail Current Level")]
         public void FailCurrentLevel()
         {
             Debug.Log("Failing current level...");
-            _levelManager?.FailLevel();
+            _levelManager?.OnLevelFailed();
         }
         
         [Button("Restart Current Level")]
@@ -155,16 +151,6 @@ namespace Gameplay.Graph
         {
             currentLevelName = levelGraph != null ? levelGraph.graphName : "Unknown";
             Debug.Log($"[LevelManagerTester] Level loaded: {currentLevelName}");
-        }
-        
-        private void OnLevelCompleted()
-        {
-            Debug.Log($"[LevelManagerTester] Level {currentLevelIndex} ({currentLevelName}) COMPLETED!");
-        }
-        
-        private void OnLevelFailed()
-        {
-            Debug.Log($"[LevelManagerTester] Level {currentLevelIndex} ({currentLevelName}) FAILED!");
         }
         
         #endregion

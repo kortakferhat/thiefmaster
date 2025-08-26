@@ -308,7 +308,7 @@ namespace Gameplay.Character
                 //EventBus.Publish(new WinEvent(_turnManager.CurrentTurn, _currentNodeId));
                 
                 // Notify LevelManager
-                _levelManager.CompleteLevel();
+                _levelManager.OnLevelCompleted();
             }
         }
         

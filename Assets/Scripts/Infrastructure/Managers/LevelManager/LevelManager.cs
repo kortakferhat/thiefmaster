@@ -39,8 +39,6 @@ namespace Infrastructure.Managers.LevelManager
         // Events
         public event Action<int> OnLevelChanged;
         public event Action<GraphScriptableObject> OnLevelLoaded;
-        public event Action OnLevelCompleted;
-        public event Action OnLevelFailed;
         public event Action<Graph> OnGridGenerated;
         public event Action<Graph> OnGridInstantiated;
         
@@ -181,16 +179,13 @@ namespace Infrastructure.Managers.LevelManager
             LoadLevel(_currentLevel + 1);
         }
 
-        public void CompleteLevel()
+        public void OnLevelCompleted()
         {
-            OnLevelCompleted?.Invoke();
         }
 
-        public void FailLevel()
+        public void OnLevelFailed()
         {
-            OnLevelFailed?.Invoke();
         }
-        
         
         private void OnGameStateChangeEvent(GameEvents.GameStateChangeEvent args)
         {
@@ -198,13 +193,13 @@ namespace Infrastructure.Managers.LevelManager
             {
                 if (args.Reason == GameEvents.GameEventChangeReason.Win)
                 {
-                    CompleteLevel();
+                    OnLevelCompleted();
                     return;
                 }
 
                 if (args.Reason == GameEvents.GameEventChangeReason.Lose)
                 {
-                    FailLevel();
+                    OnLevelFailed();
                     return;
                 }
             }
