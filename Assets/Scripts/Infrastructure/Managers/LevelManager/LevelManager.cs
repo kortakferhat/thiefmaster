@@ -199,7 +199,6 @@ namespace Infrastructure.Managers.LevelManager
                 if (args.Reason == GameEvents.GameEventChangeReason.Win)
                 {
                     CompleteLevel();
-                    _gameManager.WinGame();
                     return;
                 }
 
