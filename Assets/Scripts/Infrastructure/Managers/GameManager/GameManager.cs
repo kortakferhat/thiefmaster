@@ -11,6 +11,7 @@ namespace Infrastructure.Managers.GameManager
 
         public GameState State => _state;
 
+        private const float WinWaitTime = 1f;
         private const float LoseWaitTime = 1f;
         private const float RestartGameDelay = 2f;
         
@@ -33,18 +34,25 @@ namespace Infrastructure.Managers.GameManager
             // Pause game logic here
         }
         
-        public void WinGame()
+        public async void WinGame()
         {
-            SetGameState(GameState.Finish, GameEvents.GameEventChangeReason.Win);
             Debug.Log("[GameManager] Game won!");
+
+            await UniTask.WaitForSeconds(WinWaitTime, cancellationToken: this.GetCancellationTokenOnDestroy()).SuppressCancellationThrow();
+
+            SetGameState(GameState.Finish, GameEvents.GameEventChangeReason.Win);
+            
+            await UniTask.WaitForSeconds(RestartGameDelay, cancellationToken: this.GetCancellationTokenOnDestroy()).SuppressCancellationThrow();
+            RestartGame();
         }
         
         public async void LoseGame()
         {
+            Debug.Log("[GameManager] Game lost!");
+
             await UniTask.WaitForSeconds(LoseWaitTime, cancellationToken: this.GetCancellationTokenOnDestroy()).SuppressCancellationThrow();
 
             SetGameState(GameState.Finish, GameEvents.GameEventChangeReason.Lose);
-            Debug.Log("[GameManager] Game lost!");
             
             await UniTask.WaitForSeconds(RestartGameDelay, cancellationToken: this.GetCancellationTokenOnDestroy()).SuppressCancellationThrow();
             RestartGame();

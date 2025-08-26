@@ -44,7 +44,7 @@ namespace Gameplay.MainMenu
         
         private void HideWinText()
         {
-            winText.gameObject.SetActive(true);
+            winText.gameObject.SetActive(false);
         }
 
         public void HideGameOverText()
@@ -62,6 +62,7 @@ namespace Gameplay.MainMenu
         public void PrepareGameStateChange(GameEvents.GameStateChangeEvent args)
         {
             HideAllTexts();
+            
             var currentState = args.CurrentState;
             if (currentState == GameState.Game)
             {

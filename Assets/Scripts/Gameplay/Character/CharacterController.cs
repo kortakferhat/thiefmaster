@@ -205,6 +205,7 @@ namespace Gameplay.Character
                 _turnManager.StartNextTurn();
                 EventBus.Publish(new PlayerMovedEvent(previousNodeId, _currentNodeId, _turnManager.CurrentTurn));
                 
+                
                 AnimateToPosition(direction);
             }
         }
