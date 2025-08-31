@@ -3,6 +3,8 @@ using Gameplay;
 using UnityEngine;
 using Gameplay.Character;
 using Infrastructure.Managers.CameraManager;
+using Infrastructure;
+using Infrastructure.Events;
 
 namespace Infrastructure.Components
 {
@@ -20,11 +22,21 @@ namespace Infrastructure.Components
         [Header("Camera Settings")]
         [SerializeField] private CameraType cameraType = CameraType.Main;
         
+        [Header("Double Tap Control")]
+        [SerializeField] private bool enableAutoResume = true;
+        [SerializeField] private float autoResumeDelay = 2f;
+        
         private Camera _camera;
         private ICameraManager _cameraManager;
         private Vector3 _currentVelocity;
         private Vector3 _targetPosition;
         private Quaternion _targetRotation;
+        
+        // Follow control variables
+        private bool _isFollowing = true;
+        private Vector3 _stoppedPosition;
+        private Quaternion _stoppedRotation;
+        private float _autoResumeTimer = 0f;
         
         public enum CameraType
         {
@@ -56,9 +68,18 @@ namespace Infrastructure.Components
             set => damping = value;
         }
         
+        public bool IsFollowing => _isFollowing;
+        
         protected override void OnEntityUpdate()
         {
-            UpdateCameraFollow();
+            if (_isFollowing)
+            {
+                UpdateCameraFollow();
+            }
+            else if (enableAutoResume)
+            {
+                UpdateAutoResume();
+            }
         }
         
         public override void Initialize()
@@ -66,6 +87,7 @@ namespace Infrastructure.Components
             base.Initialize();
             ResolveCameraManager();
             SetupCamera();
+            SubscribeToEvents();
         }
         
         private void ResolveCameraManager()
@@ -90,6 +112,37 @@ namespace Infrastructure.Components
             if (followRotation)
             {
                 _camera.transform.rotation = CalculateTargetRotation();
+            }
+        }
+        
+        private void SubscribeToEvents()
+        {
+            EventBus.Subscribe<InputEvents.DoubleTapEvent>(OnDoubleTapDetected);
+        }
+        
+        private void OnDoubleTapDetected(InputEvents.DoubleTapEvent doubleTapEvent)
+        {
+            if (_isFollowing)
+            {
+                // Stop camera follow
+                StopFollow();
+            }
+            else
+            {
+                // Resume camera follow
+                ResumeFollow();
+            }
+        }
+        
+        private void UpdateAutoResume()
+        {
+            if (enableAutoResume && !_isFollowing)
+            {
+                _autoResumeTimer += Time.deltaTime;
+                if (_autoResumeTimer >= autoResumeDelay)
+                {
+                    ResumeFollow();
+                }
             }
         }
         
@@ -143,6 +196,66 @@ namespace Infrastructure.Components
             return _camera.transform.rotation;
         }
         
+        /// <summary>
+        /// Stops the camera from following the target and maintains current position
+        /// </summary>
+        public void StopFollow()
+        {
+            if (_isFollowing)
+            {
+                _isFollowing = false;
+                _stoppedPosition = _camera.transform.position;
+                _stoppedRotation = _camera.transform.rotation;
+                _autoResumeTimer = 0f;
+                
+                Debug.Log("[CameraFollow] Camera follow stopped. Camera will maintain current position.");
+            }
+        }
+        
+        /// <summary>
+        /// Resumes following the target from the current camera position
+        /// </summary>
+        public void ResumeFollow()
+        {
+            if (!_isFollowing)
+            {
+                _isFollowing = true;
+                _autoResumeTimer = 0f;
+                Debug.Log("[CameraFollow] Camera follow resumed.");
+            }
+        }
+        
+        /// <summary>
+        /// Resumes following the target and immediately moves to the target position
+        /// </summary>
+        public void ResumeFollowAndSnap()
+        {
+            if (!_isFollowing)
+            {
+                _isFollowing = true;
+                _autoResumeTimer = 0f;
+                _camera.transform.position = CalculateTargetPosition();
+                if (followRotation)
+                {
+                    _camera.transform.rotation = CalculateTargetRotation();
+                }
+                Debug.Log("[CameraFollow] Camera follow resumed and snapped to target position.");
+            }
+        }
+        
+        /// <summary>
+        /// Returns the camera to the position it was at when StopFollow was called
+        /// </summary>
+        public void ReturnToStoppedPosition()
+        {
+            if (!_isFollowing)
+            {
+                _camera.transform.position = _stoppedPosition;
+                _camera.transform.rotation = _stoppedRotation;
+                Debug.Log("[CameraFollow] Camera returned to stopped position.");
+            }
+        }
+        
         public void SetTarget(Transform newTarget)
         {
             target = newTarget;
@@ -193,6 +306,21 @@ namespace Infrastructure.Components
                 height,
                 -Mathf.Cos(radians) * distance
             );
+        }
+        
+        public void SetAutoResume(bool enabled)
+        {
+            enableAutoResume = enabled;
+        }
+        
+        public void SetAutoResumeDelay(float delay)
+        {
+            autoResumeDelay = Mathf.Max(0.1f, delay);
+        }
+        
+        private void OnDestroy()
+        {
+            EventBus.Unsubscribe<InputEvents.DoubleTapEvent>(OnDoubleTapDetected);
         }
     }
 } 

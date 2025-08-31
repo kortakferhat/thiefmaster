@@ -5,6 +5,7 @@ using Gameplay.Events;
 using Infrastructure.Managers.LevelManager;
 using Infrastructure;
 using DG.Tweening;
+using Infrastructure.Events;
 
 namespace Gameplay.Character
 {
@@ -39,9 +40,6 @@ namespace Gameplay.Character
         [Header("Debug")]
         [SerializeField] private bool showDebugLogs = true;
         
-        [Header("Input Components")]
-        [SerializeField] private Infrastructure.Input.SwipeInputHandler swipeInputHandler;
-        
         private InputSystem_Actions _playerInputActions;
         private Vector2Int _currentNodeId;
         private ILevelManager _levelManager;
@@ -71,17 +69,7 @@ namespace Gameplay.Character
             _playerInputActions.Player.Move.performed += OnMovementInputPerformed;
             _playerInputActions.Player.Enable();
             
-            // Initialize Swipe Input Handler
-            if (swipeInputHandler != null)
-            {
-                swipeInputHandler.OnSwipeDetected.AddListener(OnSwipeDetected);
-                if (showDebugLogs)
-                    Debug.Log("[CharacterController] Swipe input handler initialized");
-            }
-            else
-            {
-                Debug.LogWarning("[CharacterController] SwipeInputHandler component not assigned!");
-            }
+            EventBus.Subscribe<InputEvents.SwipeEvent>(OnSwipeDetected);
         }
         
         private void OnGridInstantiated(Graph.Graph graph)
@@ -159,18 +147,18 @@ namespace Gameplay.Character
             }
         }
         
-        private void OnSwipeDetected(Infrastructure.Input.SwipeDirection swipeDirection)
+        private void OnSwipeDetected(InputEvents.SwipeEvent args)
         {
             if (_currentState is not CharacterState.Idle) return;
             if (_turnManager.IsTurnInProgress) return; // Prevent input during turn processing
             if (_gameManager.State != GameState.Game) return;
             
-            var direction = GetDirectionFromSwipe(swipeDirection);
+            var direction = GetDirectionFromSwipe(args.Direction);
             
             if (direction != Vector2Int.zero)
             {
                 if (showDebugLogs)
-                    Debug.Log($"[CharacterController] Swipe detected: {swipeDirection} -> Direction: {direction}");
+                    Debug.Log($"[CharacterController] Swipe detected: {args.Direction} -> Direction: {direction}");
                     
                 TryMoveToNode(direction);
             }
@@ -339,15 +327,10 @@ namespace Gameplay.Character
                 _playerInputActions.Dispose();
             }
             
-            // Clean up swipe input handler
-            if (swipeInputHandler != null)
-            {
-                swipeInputHandler.OnSwipeDetected.RemoveListener(OnSwipeDetected);
-            }
-            
             _levelManager.OnLevelLoaded -= OnLevelLoaded;
             _levelManager.OnGridInstantiated -= OnGridInstantiated;
             
+            EventBus.Subscribe<InputEvents.SwipeEvent>(OnSwipeDetected);
             EventBus.Unsubscribe<GameEvents.GameStateChangeEvent>(OnGameStateChangeEvent);
         }
 
