@@ -14,7 +14,7 @@ namespace Infrastructure.Input
         Right
     }
 
-    public class SwipeInputHandler : MonoBehaviour
+    public class TouchInputListener : MonoBehaviour
     {
         [Header("Swipe Settings")]
         [SerializeField] private float swipeResistance = 100f;
