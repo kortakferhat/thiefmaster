@@ -12,6 +12,22 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3150262787147319792, guid: 90169fddf72a84cb180af08e7b71c693, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3150262787147319792, guid: 90169fddf72a84cb180af08e7b71c693, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3150262787147319792, guid: 90169fddf72a84cb180af08e7b71c693, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3150262787147319792, guid: 90169fddf72a84cb180af08e7b71c693, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5343529296377771346, guid: 90169fddf72a84cb180af08e7b71c693, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -60,6 +76,22 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 3a6654c04c26e4546a1ab8dd348792e0, type: 2}
+    - target: {fileID: 6993118605689011889, guid: 90169fddf72a84cb180af08e7b71c693, type: 3}
+      propertyPath: m_Color.a
+      value: 0.13725491
+      objectReference: {fileID: 0}
+    - target: {fileID: 6993118605689011889, guid: 90169fddf72a84cb180af08e7b71c693, type: 3}
+      propertyPath: m_Color.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6993118605689011889, guid: 90169fddf72a84cb180af08e7b71c693, type: 3}
+      propertyPath: m_Color.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6993118605689011889, guid: 90169fddf72a84cb180af08e7b71c693, type: 3}
+      propertyPath: m_Color.r
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8114718201742273114, guid: 90169fddf72a84cb180af08e7b71c693, type: 3}
       propertyPath: m_Name
       value: GoalNode
@@ -233,7 +265,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 705ff7311359c37409bdf750fc73a6e0, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -315,7 +347,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 4bcbff25453d1ae41bd5fc776a879a71, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
