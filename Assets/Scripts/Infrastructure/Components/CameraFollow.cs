@@ -5,6 +5,7 @@ using Gameplay.Character;
 using Infrastructure.Managers.CameraManager;
 using Infrastructure;
 using Infrastructure.Events;
+using DG.Tweening;
 
 namespace Infrastructure.Components
 {
@@ -25,6 +26,10 @@ namespace Infrastructure.Components
         [Header("Double Tap Control")]
         [SerializeField] private bool enableAutoResume = true;
         [SerializeField] private float autoResumeDelay = 2f;
+        
+        [Header("Transition Settings")]
+        [SerializeField] private float transitionDuration = 0.5f;
+        [SerializeField] private Ease transitionEase = Ease.InOutQuad;
         
         [Header("Fixed Camera Settings")]
         [SerializeField] private Vector3 fixedCameraPosition = new Vector3(0f, 15f, -10f);
@@ -52,6 +57,11 @@ namespace Infrastructure.Components
         private Vector3 _followModePosition;
         private Quaternion _followModeRotation;
         private bool _hasFollowModeData = false;
+        
+        // Transition variables
+        private bool _isTransitioning = false;
+        private Tween _positionTween;
+        private Tween _rotationTween;
         
         public enum CameraType
         {
@@ -177,6 +187,13 @@ namespace Infrastructure.Components
         
         private void OnDoubleTapDetected(InputEvents.DoubleTapEvent doubleTapEvent)
         {
+            // If transitioning, ignore the input
+            if (_isTransitioning)
+            {
+                Debug.Log("[CameraFollow] Ignoring double tap during transition.");
+                return;
+            }
+            
             // Double tap switches between camera modes
             ToggleCameraMode();
         }
@@ -254,24 +271,42 @@ namespace Infrastructure.Components
                 _isFollowing = true;
                 _autoResumeTimer = 0f;
                 
-                // Restore previous follow mode position and rotation if available
-                if (_hasFollowModeData)
-                {
-                    _camera.transform.position = _followModePosition;
-                    _camera.transform.rotation = _followModeRotation;
-                    Debug.Log("[CameraFollow] Switched to Follow mode. Restored position: " + _followModePosition + ", rotation: " + _followModeRotation.eulerAngles);
-                }
-                else
-                {
-                    // Fallback to calculated position if no saved data
-                    _camera.transform.position = CalculateTargetPosition();
-                    if (followRotation)
-                    {
-                        _camera.transform.rotation = CalculateTargetRotation();
-                    }
-                    Debug.Log("[CameraFollow] Switched to Follow mode. Using calculated position.");
-                }
+                // Start transition to follow mode
+                StartTransitionToFollowMode();
             }
+        }
+        
+        private void StartTransitionToFollowMode()
+        {
+            if (_isTransitioning) return;
+            
+            _isTransitioning = true;
+            Vector3 targetPosition;
+            Quaternion targetRotation;
+            
+            // Determine target position and rotation
+            if (_hasFollowModeData)
+            {
+                targetPosition = _followModePosition;
+                targetRotation = _followModeRotation;
+                Debug.Log("[CameraFollow] Transitioning to Follow mode. Target position: " + targetPosition + ", rotation: " + targetRotation.eulerAngles);
+            }
+            else
+            {
+                targetPosition = CalculateTargetPosition();
+                targetRotation = followRotation ? CalculateTargetRotation() : _camera.transform.rotation;
+                Debug.Log("[CameraFollow] Transitioning to Follow mode. Using calculated position.");
+            }
+            
+            // Animate position transition
+            _positionTween = _camera.transform.DOMove(targetPosition, transitionDuration)
+                .SetEase(transitionEase)
+                .OnComplete(() => OnPositionTransitionComplete());
+                
+            // Animate rotation transition
+            _rotationTween = _camera.transform.DORotate(targetRotation.eulerAngles, transitionDuration)
+                .SetEase(transitionEase)
+                .OnComplete(() => OnRotationTransitionComplete());
         }
         
         /// <summary>
@@ -289,15 +324,46 @@ namespace Infrastructure.Components
                 _currentMode = CameraMode.Fixed;
                 _isFollowing = false;
                 
-                // Move camera to fixed position immediately
-                _camera.transform.position = fixedCameraPosition;
-                if (useFixedCameraRotation)
-                {
-                    _camera.transform.rotation = Quaternion.Euler(fixedCameraRotation);
-                }
-                
-                Debug.Log("[CameraFollow] Switched to Fixed mode. Saved follow position: " + _followModePosition + ", rotation: " + _followModeRotation.eulerAngles);
+                // Start transition to fixed mode
+                StartTransitionToFixedMode();
             }
+        }
+        
+        private void StartTransitionToFixedMode()
+        {
+            if (_isTransitioning) return;
+            
+            _isTransitioning = true;
+            Vector3 targetPosition = fixedCameraPosition;
+            Quaternion targetRotation = useFixedCameraRotation ? Quaternion.Euler(fixedCameraRotation) : _camera.transform.rotation;
+            
+            Debug.Log("[CameraFollow] Transitioning to Fixed mode. Target position: " + targetPosition + ", rotation: " + targetRotation.eulerAngles);
+            
+            // Animate position transition
+            _positionTween = _camera.transform.DOMove(targetPosition, transitionDuration)
+                .SetEase(transitionEase)
+                .OnComplete(() => OnPositionTransitionComplete());
+                
+            // Animate rotation transition
+            _rotationTween = _camera.transform.DORotate(targetRotation.eulerAngles, transitionDuration)
+                .SetEase(transitionEase)
+                .OnComplete(() => OnRotationTransitionComplete());
+        }
+        
+        private void OnPositionTransitionComplete()
+        {
+            // Position transition completed
+            Debug.Log("[CameraFollow] Position transition completed.");
+        }
+        
+        private void OnRotationTransitionComplete()
+        {
+            // Rotation transition completed
+            Debug.Log("[CameraFollow] Rotation transition completed.");
+            
+            // Both transitions are complete, reset transitioning state
+            _isTransitioning = false;
+            Debug.Log("[CameraFollow] All transitions completed. Camera mode switch finished.");
         }
         
         /// <summary>
@@ -519,6 +585,16 @@ namespace Infrastructure.Components
         private void OnDestroy()
         {
             EventBus.Unsubscribe<InputEvents.DoubleTapEvent>(OnDoubleTapDetected);
+            
+            // Kill any active tweens
+            if (_positionTween != null && _positionTween.IsActive())
+            {
+                _positionTween.Kill();
+            }
+            if (_rotationTween != null && _rotationTween.IsActive())
+            {
+                _rotationTween.Kill();
+            }
         }
     }
 } 
