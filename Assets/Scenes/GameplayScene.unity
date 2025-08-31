@@ -690,6 +690,9 @@ MonoBehaviour:
   cameraType: 0
   enableAutoResume: 1
   autoResumeDelay: 2
+  fixedCameraPosition: {x: 0, y: 30, z: 13.5}
+  fixedCameraRotation: {x: 90, y: 0, z: 0}
+  useFixedCameraRotation: 1
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
