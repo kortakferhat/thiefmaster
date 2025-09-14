@@ -6,6 +6,7 @@ using Infrastructure.Managers.LevelManager;
 using Infrastructure;
 using DG.Tweening;
 using Infrastructure.Events;
+using UnityEngine.Serialization;
 
 namespace Gameplay.Character
 {
@@ -24,14 +25,16 @@ namespace Gameplay.Character
         // Interface properties
         public Vector2Int CurrentNodeId => _currentNodeId;
         public CharacterState CurrentState => _currentState;
-        
+        public float MoveDuration => _moveDuration;
+
         [Header("Components")]
         [SerializeField] private Transform characterTransform;
         [SerializeField] private Animator animator;
+        [SerializeField] private CharacterSpriteEffects characterSpriteEffects;
         
         [Header("Movement Settings")]
-        [SerializeField] private float moveDuration = 1f;
-        [SerializeField] private Ease moveEase = Ease.OutQuad;
+        private readonly float _moveDuration = 0.5f;
+        private readonly Ease _moveEase = Ease.OutQuad;
         
         [Header("Rotation Settings")]
         [SerializeField] private float rotationDuration = 0.25f;
@@ -58,6 +61,9 @@ namespace Gameplay.Character
             _levelManager.OnGridInstantiated += OnGridInstantiated;
             
             EventBus.Subscribe<GameEvents.GameStateChangeEvent>(OnGameStateChangeEvent);
+            
+            // Initialize sprite effects with movement duration
+            characterSpriteEffects.Initialize(_moveDuration);
             
             InitializeInputSystem();
         }
@@ -130,6 +136,9 @@ namespace Gameplay.Character
                     SetStartPosition(startNode);
                 }
             }
+            
+            // Reset sprite effects to original state
+            characterSpriteEffects.ResetToOriginalState();
         }
         
         private void OnMovementInputPerformed(InputAction.CallbackContext context)
@@ -241,19 +250,22 @@ namespace Gameplay.Character
                 _currentMoveTween.Kill(true);
             }
             
+            // Set facing direction before movement
+            characterSpriteEffects.SetFacingDirection(direction);
+            
             SetCurrentState(CharacterState.Walk);
             var targetPos = _levelManager.GetNodeActualWorldPosition(_currentNodeId);
             
             _currentMoveTween = DOTween.Sequence()
-                .Insert(0f, characterTransform.DOMove(targetPos, moveDuration).SetEase(moveEase))
-                .InsertCallback(moveDuration * .75f, () =>
+                .Insert(0f, characterTransform.DOMove(targetPos, _moveDuration).SetEase(_moveEase))
+                .InsertCallback(_moveDuration * .75f, () =>
                 {
                     if (_currentState is not CharacterState.Dead)
                     {
                         SetAnimationState(CharacterState.Idle);
                     }
                     
-                }).SetEase(moveEase)
+                }).SetEase(_moveEase)
                 .OnComplete(OnMoveComplete)
                 .SetAutoKill(true);
         }
@@ -341,6 +353,9 @@ namespace Gameplay.Character
 
             _currentState = newState;
             SetAnimationState(_currentState);
+            
+            // Notify sprite effects component about state change
+            characterSpriteEffects.OnCharacterStateChanged(_currentState);
 
             if (showDebugLogs)
                 Debug.Log($"[CharacterController] State changed to {_currentState}");
@@ -349,7 +364,7 @@ namespace Gameplay.Character
         private void SetAnimationState(CharacterState state)
         {
             var stateName = state.ToString().ToLower();
-            animator.SetTrigger(stateName);
+            //animator.SetTrigger(stateName);
         }
     }
 }
