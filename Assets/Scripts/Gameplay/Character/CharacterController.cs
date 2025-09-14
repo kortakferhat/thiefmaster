@@ -109,8 +109,8 @@ namespace Gameplay.Character
             // Immediately update character position without animation
             UpdateCharacterPosition();
             
-            // Reset character rotation to default (facing up)
-            characterTransform.rotation = Quaternion.identity;
+            // Reset character rotation to default (no rotation needed for 2D sprites)
+            characterTransform.rotation = Quaternion.identity; // Z ekseni kullanılmıyor
             
             if (showDebugLogs)
                 Debug.Log($"[CharacterController] Character reset to start position at node {_currentNodeId}");
@@ -229,16 +229,8 @@ namespace Gameplay.Character
         
         private Vector3 GetRotationFromDirection(Vector2Int direction)
         {
-            if (direction == Vector2Int.right)
-                return new Vector3(0, 90, 0);
-            else if (direction == Vector2Int.left)
-                return new Vector3(0, -90, 0);
-            else if (direction == Vector2Int.up)
-                return new Vector3(0, 0, 0);
-            else if (direction == Vector2Int.down)
-                return new Vector3(0, 180, 0);
-            
-            return Vector3.zero;
+            // Z ekseni kullanılmıyor, sprite sort order ile derinlik ayarlanacak
+            return Vector3.zero; // Hiç rotasyon yok
         }
         
         private void AnimateToPosition(Vector2Int direction)
@@ -251,10 +243,8 @@ namespace Gameplay.Character
             
             SetCurrentState(CharacterState.Walk);
             var targetPos = _levelManager.GetNodeActualWorldPosition(_currentNodeId);
-            var targetRotation = GetRotationFromDirection(direction);
             
             _currentMoveTween = DOTween.Sequence()
-                .Insert(0f, characterTransform.DORotate(targetRotation, rotationDuration).SetEase(rotationEase))
                 .Insert(0f, characterTransform.DOMove(targetPos, moveDuration).SetEase(moveEase))
                 .InsertCallback(moveDuration * .75f, () =>
                 {

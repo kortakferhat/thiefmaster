@@ -279,11 +279,17 @@ namespace Infrastructure.Managers.LevelManager
             {
                 var fromPos = CalculateNodePosition(edgeData.fromId);
                 var toPos = CalculateNodePosition(edgeData.toId);
-                var centerPos = (fromPos + toPos) * 0.5f;
-                centerPos.y += _gridConfig.edgeYOffset;
+                
+                // Vector2 ile merkez pozisyon hesapla
+                var fromPos2D = new Vector2(fromPos.x, fromPos.y);
+                var toPos2D = new Vector2(toPos.x, toPos.y);
+                var centerPos2D = (fromPos2D + toPos2D) * 0.5f;
+                var centerPos = new Vector3(centerPos2D.x, centerPos2D.y, 0f);
 
-                var direction = (toPos - fromPos).normalized;
-                var rotation = Quaternion.LookRotation(direction);
+                var direction = (toPos2D - fromPos2D).normalized;
+                // 2D sprite rotasyonu - Z ekseni etrafında dönme
+                var angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+                var rotation = Quaternion.Euler(0, 0, angle);
 
                 var poolKey = GetEdgePoolKey(edgeData.type);
                 var edgeObj = _poolManager.Spawn(poolKey, _edgesParent, centerPos, rotation);
@@ -296,9 +302,8 @@ namespace Infrastructure.Managers.LevelManager
                 
                 edgeObj.name = $"{edgeData.type}Edge_({edgeData.fromId.x},{edgeData.fromId.y})_to_({edgeData.toId.x},{edgeData.toId.y})";
                 
-                // Scale edge
-                var distance = Vector3.Distance(fromPos, toPos);
-                edgeObj.transform.localScale = new Vector3(_gridConfig.edgeWidth, _gridConfig.edgeWidth, distance);
+                var distance = Vector2.Distance(new Vector2(fromPos.x, fromPos.y), new Vector2(toPos.x, toPos.y));
+                edgeObj.transform.localScale = new Vector3(distance, _gridConfig.edgeWidth, 1f);
                 
                 _spawnedEdges.Add(edgeObj);
             }
@@ -306,21 +311,23 @@ namespace Infrastructure.Managers.LevelManager
 
         private Vector3 CalculateNodePosition(Vector2Int nodeId)
         {
-            var gridPos = new Vector3(
+            // 2D koordinat sistemi: Sadece X-Y düzleminde hareket
+            var gridPos2D = new Vector2(
                 nodeId.x * _gridConfig.gridSpacing,
-                _gridConfig.nodeYPosition,
                 nodeId.y * _gridConfig.gridSpacing
             );
             
             // Center the grid
-            var gridCenter = CalculateGridCenter();
-            return gridPos - gridCenter;
+            var gridCenter2D = CalculateGridCenter2D();
+            var finalPos2D = gridPos2D - gridCenter2D;
+            
+            return new Vector3(finalPos2D.x, finalPos2D.y, 0f);
         }
 
-        private Vector3 CalculateGridCenter()
+        private Vector2 CalculateGridCenter2D()
         {
             if (_currentLevelGraph?.graphData?.nodes == null || _currentLevelGraph.graphData.nodes.Count == 0)
-                return Vector3.zero;
+                return Vector2.zero;
             
             var nodes = _currentLevelGraph.graphData.nodes;
             
@@ -336,11 +343,10 @@ namespace Infrastructure.Managers.LevelManager
                 maxY = Mathf.Max(maxY, node.id.y);
             }
             
-            // Calculate center
+            // Calculate center - 2D koordinat sistemi için
             var gridCenter = new Vector2Int((minX + maxX) / 2, (minY + maxY) / 2);
-            return new Vector3(
+            return new Vector2(
                 gridCenter.x * _gridConfig.gridSpacing,
-                _gridConfig.nodeYPosition,
                 gridCenter.y * _gridConfig.gridSpacing
             );
         }
@@ -349,10 +355,10 @@ namespace Infrastructure.Managers.LevelManager
         {
             if (_gridRoot == null) return;
             
-            // Apply vertical offset
+            // Apply vertical offset - 2D'de Y ekseni üzerinde hareket
             var screenHeight = Camera.main.orthographicSize * 2f;
             var offset = (screenHeight * _gridConfig.verticalOffsetPercentage) + _gridConfig.additionalVerticalOffset;
-            _gridRoot.transform.localPosition = new Vector3(0, 0, offset);
+            _gridRoot.transform.localPosition = new Vector3(0, offset, 0);
         }
 
         public void UnloadLevel()

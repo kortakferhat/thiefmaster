@@ -13,11 +13,9 @@ namespace Infrastructure.Components
     {
         [Header("Follow Settings")]
         [SerializeField] private Transform target;
-        [SerializeField] private Vector3 offset = new Vector3(0f, 10f, -5f);
+        [SerializeField] private Vector3 offset = new Vector3(0f, 0f, 0f); // Z ekseni kullanılmıyor
         [SerializeField] private float followSpeed = 5f;
-        [SerializeField] private float rotationSpeed = 2f;
         [SerializeField] private float damping = 0.1f;
-        [SerializeField] private bool followRotation = true;
         [SerializeField] private bool smoothFollow = true;
         
         [Header("Camera Settings")]
@@ -32,36 +30,29 @@ namespace Infrastructure.Components
         [SerializeField] private Ease transitionEase = Ease.InOutQuad;
         
         [Header("Fixed Camera Settings")]
-        [SerializeField] private Vector3 fixedCameraPosition = new Vector3(0f, 15f, -10f);
-        [SerializeField] private Vector3 fixedCameraRotation = new Vector3(45f, 0f, 0f);
-        [SerializeField] private bool useFixedCameraRotation = true;
+        [SerializeField] private Vector3 fixedCameraPosition = new Vector3(0f, 0f, 0f); // Z ekseni kullanılmıyor
         
         private Camera _camera;
         private ICameraManager _cameraManager;
         private Vector3 _currentVelocity;
         private Vector3 _targetPosition;
-        private Quaternion _targetRotation;
         
         // Camera mode control variables
         private CameraMode _currentMode = CameraMode.Follow;
         private bool _isFollowing = true;
         private Vector3 _stoppedPosition;
-        private Quaternion _stoppedRotation;
         private float _autoResumeTimer = 0f;
         
         // Fixed camera variables
         private Vector3 _savedFixedPosition;
-        private Quaternion _savedFixedRotation;
         
         // Follow mode restore variables
         private Vector3 _followModePosition;
-        private Quaternion _followModeRotation;
         private bool _hasFollowModeData = false;
         
         // Transition variables
         private bool _isTransitioning = false;
         private Tween _positionTween;
-        private Tween _rotationTween;
         
         public enum CameraType
         {
@@ -133,13 +124,11 @@ namespace Infrastructure.Components
             
             // Save initial fixed camera settings
             _savedFixedPosition = fixedCameraPosition;
-            _savedFixedRotation = Quaternion.Euler(fixedCameraRotation);
             
             // Initialize follow mode data with current camera state
             if (_currentMode == CameraMode.Follow)
             {
                 _followModePosition = _camera.transform.position;
-                _followModeRotation = _camera.transform.rotation;
                 _hasFollowModeData = true;
             }
         }
@@ -165,18 +154,14 @@ namespace Infrastructure.Components
             if (_currentMode == CameraMode.Follow)
             {
                 _camera.transform.position = CalculateTargetPosition();
-                if (followRotation)
-                {
-                    _camera.transform.rotation = CalculateTargetRotation();
-                }
+                // 2D'de kamera rotasyonu sabit kalır (orthographic için)
+                _camera.transform.rotation = Quaternion.identity;
             }
             else
             {
                 _camera.transform.position = fixedCameraPosition;
-                if (useFixedCameraRotation)
-                {
-                    _camera.transform.rotation = Quaternion.Euler(fixedCameraRotation);
-                }
+                // 2D'de kamera rotasyonu sabit kalır (orthographic için)
+                _camera.transform.rotation = Quaternion.identity;
             }
         }
         
@@ -232,32 +217,14 @@ namespace Infrastructure.Components
                 );
             }
             
-            if (followRotation)
-            {
-                _targetRotation = CalculateTargetRotation();
-                _camera.transform.rotation = Quaternion.Slerp(
-                    _camera.transform.rotation, 
-                    _targetRotation, 
-                    rotationSpeed * Time.deltaTime
-                );
-            }
+            // 2D'de kamera rotasyonu sabit kalır (orthographic için)
+            _camera.transform.rotation = Quaternion.identity;
         }
         
         private Vector3 CalculateTargetPosition()
         {
             Vector3 targetPos = target.position + offset;
             return targetPos;
-        }
-        
-        private Quaternion CalculateTargetRotation()
-        {
-            Vector3 direction = target.position - _camera.transform.position;
-            if (direction != Vector3.zero)
-            {
-                return Quaternion.LookRotation(direction);
-            }
-            
-            return _camera.transform.rotation;
         }
         
         /// <summary>
@@ -282,19 +249,16 @@ namespace Infrastructure.Components
             
             _isTransitioning = true;
             Vector3 targetPosition;
-            Quaternion targetRotation;
             
-            // Determine target position and rotation
+            // Determine target position
             if (_hasFollowModeData)
             {
                 targetPosition = _followModePosition;
-                targetRotation = _followModeRotation;
-                Debug.Log("[CameraFollow] Transitioning to Follow mode. Target position: " + targetPosition + ", rotation: " + targetRotation.eulerAngles);
+                Debug.Log("[CameraFollow] Transitioning to Follow mode. Target position: " + targetPosition);
             }
             else
             {
                 targetPosition = CalculateTargetPosition();
-                targetRotation = followRotation ? CalculateTargetRotation() : _camera.transform.rotation;
                 Debug.Log("[CameraFollow] Transitioning to Follow mode. Using calculated position.");
             }
             
@@ -303,10 +267,8 @@ namespace Infrastructure.Components
                 .SetEase(transitionEase)
                 .OnComplete(() => OnPositionTransitionComplete());
                 
-            // Animate rotation transition
-            _rotationTween = _camera.transform.DORotate(targetRotation.eulerAngles, transitionDuration)
-                .SetEase(transitionEase)
-                .OnComplete(() => OnRotationTransitionComplete());
+            // 2D'de kamera rotasyonu sabit kalır
+            _camera.transform.rotation = Quaternion.identity;
         }
         
         /// <summary>
@@ -318,7 +280,6 @@ namespace Infrastructure.Components
             {
                 // Save current follow mode state before switching
                 _followModePosition = _camera.transform.position;
-                _followModeRotation = _camera.transform.rotation;
                 _hasFollowModeData = true;
                 
                 _currentMode = CameraMode.Fixed;
@@ -335,33 +296,24 @@ namespace Infrastructure.Components
             
             _isTransitioning = true;
             Vector3 targetPosition = fixedCameraPosition;
-            Quaternion targetRotation = useFixedCameraRotation ? Quaternion.Euler(fixedCameraRotation) : _camera.transform.rotation;
             
-            Debug.Log("[CameraFollow] Transitioning to Fixed mode. Target position: " + targetPosition + ", rotation: " + targetRotation.eulerAngles);
+            Debug.Log("[CameraFollow] Transitioning to Fixed mode. Target position: " + targetPosition);
             
             // Animate position transition
             _positionTween = _camera.transform.DOMove(targetPosition, transitionDuration)
                 .SetEase(transitionEase)
                 .OnComplete(() => OnPositionTransitionComplete());
                 
-            // Animate rotation transition
-            _rotationTween = _camera.transform.DORotate(targetRotation.eulerAngles, transitionDuration)
-                .SetEase(transitionEase)
-                .OnComplete(() => OnRotationTransitionComplete());
+            // 2D'de kamera rotasyonu sabit kalır
+            _camera.transform.rotation = Quaternion.identity;
         }
         
         private void OnPositionTransitionComplete()
         {
             // Position transition completed
             Debug.Log("[CameraFollow] Position transition completed.");
-        }
-        
-        private void OnRotationTransitionComplete()
-        {
-            // Rotation transition completed
-            Debug.Log("[CameraFollow] Rotation transition completed.");
             
-            // Both transitions are complete, reset transitioning state
+            // Transition is complete, reset transitioning state
             _isTransitioning = false;
             Debug.Log("[CameraFollow] All transitions completed. Camera mode switch finished.");
         }
@@ -390,7 +342,6 @@ namespace Infrastructure.Components
             {
                 _isFollowing = false;
                 _stoppedPosition = _camera.transform.position;
-                _stoppedRotation = _camera.transform.rotation;
                 _autoResumeTimer = 0f;
                 
                 Debug.Log("[CameraFollow] Camera follow stopped. Camera will maintain current position.");
@@ -420,10 +371,8 @@ namespace Infrastructure.Components
                 _isFollowing = true;
                 _autoResumeTimer = 0f;
                 _camera.transform.position = CalculateTargetPosition();
-                if (followRotation)
-                {
-                    _camera.transform.rotation = CalculateTargetRotation();
-                }
+                // 2D'de kamera rotasyonu sabit kalır
+                _camera.transform.rotation = Quaternion.identity;
                 Debug.Log("[CameraFollow] Camera follow resumed and snapped to target position.");
             }
         }
@@ -436,7 +385,8 @@ namespace Infrastructure.Components
             if (!_isFollowing && _currentMode == CameraMode.Follow)
             {
                 _camera.transform.position = _stoppedPosition;
-                _camera.transform.rotation = _stoppedRotation;
+                // 2D'de kamera rotasyonu sabit kalır
+                _camera.transform.rotation = Quaternion.identity;
                 Debug.Log("[CameraFollow] Camera returned to stopped position.");
             }
         }
@@ -453,54 +403,16 @@ namespace Infrastructure.Components
             }
         }
         
-        /// <summary>
-        /// Sets the fixed camera rotation in euler angles
-        /// </summary>
-        public void SetFixedCameraRotation(Vector3 rotation)
-        {
-            fixedCameraRotation = rotation;
-            if (_currentMode == CameraMode.Fixed && useFixedCameraRotation)
-            {
-                _camera.transform.rotation = Quaternion.Euler(rotation);
-            }
-        }
         
         /// <summary>
-        /// Sets the fixed camera rotation using quaternion
-        /// </summary>
-        public void SetFixedCameraRotation(Quaternion rotation)
-        {
-            _savedFixedRotation = rotation;
-            fixedCameraRotation = rotation.eulerAngles;
-            if (_currentMode == CameraMode.Fixed && useFixedCameraRotation)
-            {
-                _camera.transform.rotation = rotation;
-            }
-        }
-        
-        /// <summary>
-        /// Sets whether to use fixed camera rotation
-        /// </summary>
-        public void SetUseFixedCameraRotation(bool useRotation)
-        {
-            useFixedCameraRotation = useRotation;
-            if (_currentMode == CameraMode.Fixed && useRotation)
-            {
-                _camera.transform.rotation = Quaternion.Euler(fixedCameraRotation);
-            }
-        }
-        
-        /// <summary>
-        /// Saves current camera position and rotation as fixed camera settings
+        /// Saves current camera position as fixed camera settings
         /// </summary>
         public void SaveCurrentAsFixed()
         {
             _savedFixedPosition = _camera.transform.position;
-            _savedFixedRotation = _camera.transform.rotation;
             fixedCameraPosition = _savedFixedPosition;
-            fixedCameraRotation = _savedFixedRotation.eulerAngles;
             
-            Debug.Log("[CameraFollow] Current camera position and rotation saved as fixed camera settings.");
+            Debug.Log("[CameraFollow] Current camera position saved as fixed camera settings.");
         }
         
         /// <summary>
@@ -509,12 +421,11 @@ namespace Infrastructure.Components
         public void RestoreSavedFixed()
         {
             fixedCameraPosition = _savedFixedPosition;
-            fixedCameraRotation = _savedFixedRotation.eulerAngles;
             
             if (_currentMode == CameraMode.Fixed)
             {
                 _camera.transform.position = _savedFixedPosition;
-                _camera.transform.rotation = _savedFixedRotation;
+                _camera.transform.rotation = Quaternion.identity;
             }
             
             Debug.Log("[CameraFollow] Saved fixed camera settings restored.");
@@ -535,10 +446,6 @@ namespace Infrastructure.Components
             followSpeed = Mathf.Max(0.1f, newSpeed);
         }
         
-        public void SetRotationSpeed(float newSpeed)
-        {
-            rotationSpeed = Mathf.Max(0.1f, newSpeed);
-        }
         
         public void SetDamping(float newDamping)
         {
@@ -556,10 +463,6 @@ namespace Infrastructure.Components
             smoothFollow = smooth;
         }
         
-        public void SetFollowRotation(bool follow)
-        {
-            followRotation = follow;
-        }
         
         // Method to set offset based on camera angle
         public void SetOffsetByAngle(float height, float distance, float angle)
@@ -568,7 +471,7 @@ namespace Infrastructure.Components
             offset = new Vector3(
                 -Mathf.Sin(radians) * distance,
                 height,
-                -Mathf.Cos(radians) * distance
+                0f // Z ekseni kullanılmıyor
             );
         }
         
@@ -590,10 +493,6 @@ namespace Infrastructure.Components
             if (_positionTween != null && _positionTween.IsActive())
             {
                 _positionTween.Kill();
-            }
-            if (_rotationTween != null && _rotationTween.IsActive())
-            {
-                _rotationTween.Kill();
             }
         }
     }
