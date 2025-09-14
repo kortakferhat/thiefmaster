@@ -55,7 +55,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 0}
+  - {fileID: 2100000, guid: e21f1a5b3b6fd4b59911ed56f9b8e89c, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -138,8 +138,6 @@ MonoBehaviour:
   characterTransform: {fileID: 4621229515235408885}
   animator: {fileID: 6636731139231150690}
   characterSpriteEffects: {fileID: 8573266182660618368}
-  moveDuration: 0.75
-  moveEase: 3
   rotationDuration: 0.25
   rotationEase: 6
   showDebugLogs: 1
@@ -206,9 +204,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spriteRenderer: {fileID: 4032425947422966018}
-  walkSquashScale: 0.8
-  walkStretchScale: 1.2
-  walkAnimationDuration: 0.3
+  walkScaleUp: 1.35
+  walkScaleDown: 0.9
+  walkScaleFinal: 1
   idleColor: {r: 1, g: 1, b: 1, a: 1}
   walkColor: {r: 1, g: 1, b: 1, a: 1}
   deadColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}

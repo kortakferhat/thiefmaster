@@ -18,6 +18,7 @@ namespace Gameplay.Enemy
         [Header("Enemy Settings")]
         [SerializeField] private Transform enemyTransform;
         [SerializeField] private Animator animator;
+        [SerializeField] private SpriteRenderer spriteRenderer;
         [SerializeField] private Vector2Int facingDirection = Vector2Int.up;
         
         [Header("Movement Animation")]
@@ -134,12 +135,14 @@ namespace Gameplay.Enemy
                 _currentMoveTween.Kill();
             }
 
-            // Calculate movement direction for rotation
+            // Calculate movement direction for facing
             var moveDirection = newNodeId - previousNodeId;
+            
+            // Set facing direction before movement
+            SetFacingDirection(moveDirection);
             
             // Get target world position
             var targetPos = _levelManager.GetNodeActualWorldPosition(newNodeId);
-            var targetRotation = GetRotationFromDirection(moveDirection);
             
             SetCurrentState(CharacterState.Walk);
             SetAnimationState(CharacterState.Idle);
@@ -151,9 +154,8 @@ namespace Gameplay.Enemy
                 if (_currentState != CharacterState.Walk) return;
                 SetAnimationState(CharacterState.Walk);
 
-                // Animate movement and rotation
+                // Animate movement only (no rotation)
                 DOTween.Sequence()
-                    .Insert(0f, enemyTransform.DORotate(targetRotation, moveDuration * 0.5f).SetEase(moveEase))
                     .Insert(0f, enemyTransform.DOMove(targetPos, moveDuration).SetEase(moveEase))
                     .OnComplete(() => OnMoveComplete(newNodeId))
                     .SetAutoKill(true);
@@ -174,15 +176,21 @@ namespace Gameplay.Enemy
         }
         
         /// <summary>
-        /// Set the enemy's facing direction
+        /// Set the enemy's facing direction based on movement direction
         /// </summary>
         public void SetFacingDirection(Vector2Int direction)
         {
-            facingDirection = direction;
-            UpdateVisualRotation();
+            if (direction.x != 0) // Only handle left-right movement
+            {
+                bool facingRight = direction.x > 0;
+                spriteRenderer.flipX = !facingRight;
+                
+                if (showDebugLogs)
+                    Debug.Log($"[GridEnemy] Facing direction set to: {(facingRight ? "Right" : "Left")}");
+            }
             
-            if (showDebugLogs)
-                Debug.Log($"[GridEnemy] Now facing {facingDirection}");
+            // Update facing direction for game logic
+            facingDirection = direction;
         }
         
         /// <summary>
@@ -197,26 +205,7 @@ namespace Gameplay.Enemy
                 Debug.Log($"[GridEnemy] Behaviour changed from {previousBehaviour?.GetBehaviourName()} to {_currentBehaviour.GetBehaviourName()}");
         }
         
-        private void UpdateVisualRotation()
-        {
-            // Convert direction to rotation
-            Vector3 rotation = GetRotationFromDirection(facingDirection);
-            enemyTransform.rotation = Quaternion.Euler(rotation);
-        }
         
-        private Vector3 GetRotationFromDirection(Vector2Int direction)
-        {
-            if (direction == Vector2Int.right)
-                return new Vector3(0, 90, 0);
-            else if (direction == Vector2Int.left)
-                return new Vector3(0, -90, 0);
-            else if (direction == Vector2Int.up)
-                return new Vector3(0, 0, 0);
-            else if (direction == Vector2Int.down)
-                return new Vector3(0, 180, 0);
-            
-            return Vector3.zero;
-        }
         
         private void OnTurnStarted(TurnStartedEvent turnEvent)
         {
@@ -301,7 +290,13 @@ namespace Gameplay.Enemy
         public void ReverseFacingDirection()
         {
             facingDirection = -facingDirection;
-            UpdateVisualRotation();
+            
+            // Update sprite flip for left-right directions
+            if (facingDirection.x != 0)
+            {
+                bool facingRight = facingDirection.x > 0;
+                spriteRenderer.flipX = !facingRight;
+            }
             
             if (showDebugLogs)
                 Debug.Log($"[GridEnemy] Reversed direction, now facing {facingDirection}");
