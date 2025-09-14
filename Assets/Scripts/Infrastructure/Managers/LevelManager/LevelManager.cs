@@ -219,9 +219,6 @@ namespace Infrastructure.Managers.LevelManager
             GenerateNodes();
             GenerateEdges();
             
-            // Apply positioning
-            PositionGrid();
-            
             // Notify
             OnGridGenerated?.Invoke(_currentGraph);
             OnGridInstantiated?.Invoke(_currentGraph);
@@ -349,16 +346,6 @@ namespace Infrastructure.Managers.LevelManager
                 gridCenter.x * _gridConfig.gridSpacing,
                 gridCenter.y * _gridConfig.gridSpacing
             );
-        }
-
-        private void PositionGrid()
-        {
-            if (_gridRoot == null) return;
-            
-            // Apply vertical offset - 2D'de Y ekseni üzerinde hareket
-            var screenHeight = Camera.main.orthographicSize * 2f;
-            var offset = (screenHeight * _gridConfig.verticalOffsetPercentage) + _gridConfig.additionalVerticalOffset;
-            _gridRoot.transform.localPosition = new Vector3(0, offset, 0);
         }
 
         public void UnloadLevel()
