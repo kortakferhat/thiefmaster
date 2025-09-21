@@ -63,7 +63,7 @@ namespace Infrastructure.Managers.LevelManager
                 EventBus.Subscribe<GameEvents.GameStateChangeEvent>(OnGameStateChangeEvent);
                 
                 // Load first level
-                LoadLevel(1);
+                LoadLevel(3);
             }
             catch (Exception ex)
             {

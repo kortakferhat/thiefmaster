@@ -15,7 +15,7 @@ MonoBehaviour:
   gridSpacing: 5
   verticalOffsetPercentage: 1
   additionalVerticalOffset: 0
-  edgeLength: 2
+  edgeLength: 3
   edgeWidth: 1
   showGrid: 1
   showEdges: 1
