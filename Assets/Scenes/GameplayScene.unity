@@ -103506,6 +103506,22 @@ PrefabInstance:
       propertyPath: m_Name
       value: Character
       objectReference: {fileID: 0}
+    - target: {fileID: 4032425947422966018, guid: 7d0e26166422e4850962275d30053453, type: 3}
+      propertyPath: m_Color.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4032425947422966018, guid: 7d0e26166422e4850962275d30053453, type: 3}
+      propertyPath: m_Color.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4032425947422966018, guid: 7d0e26166422e4850962275d30053453, type: 3}
+      propertyPath: m_Color.r
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4238201765099381386, guid: 7d0e26166422e4850962275d30053453, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4621229515235408885, guid: 7d0e26166422e4850962275d30053453, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -103559,7 +103575,8 @@ PrefabInstance:
       value: 4
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 4238201765099381386, guid: 7d0e26166422e4850962275d30053453, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7d0e26166422e4850962275d30053453, type: 3}
