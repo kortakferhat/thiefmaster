@@ -1,0 +1,546 @@
+fileFormatVersion: 2
+guid: 612718cbcc0110d49a5b4a94cf65e8d5
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -5979757040934122974
+    second: watercolor_soft_blobs_4x4_atlas_256_0
+  - first:
+      213: -1685466829040538502
+    second: watercolor_soft_blobs_4x4_atlas_256_1
+  - first:
+      213: -2274519178404618131
+    second: watercolor_soft_blobs_4x4_atlas_256_2
+  - first:
+      213: -3700893587261113904
+    second: watercolor_soft_blobs_4x4_atlas_256_3
+  - first:
+      213: -6131379634304119334
+    second: watercolor_soft_blobs_4x4_atlas_256_4
+  - first:
+      213: 1430033339057948833
+    second: watercolor_soft_blobs_4x4_atlas_256_5
+  - first:
+      213: -3402332229984630416
+    second: watercolor_soft_blobs_4x4_atlas_256_6
+  - first:
+      213: -2099131932392005366
+    second: watercolor_soft_blobs_4x4_atlas_256_7
+  - first:
+      213: -4485538222446270587
+    second: watercolor_soft_blobs_4x4_atlas_256_8
+  - first:
+      213: 8415680838834936389
+    second: watercolor_soft_blobs_4x4_atlas_256_9
+  - first:
+      213: -258879565033944679
+    second: watercolor_soft_blobs_4x4_atlas_256_10
+  - first:
+      213: -5523396857505739848
+    second: watercolor_soft_blobs_4x4_atlas_256_11
+  - first:
+      213: 3176529992648324821
+    second: watercolor_soft_blobs_4x4_atlas_256_12
+  - first:
+      213: -6346411319918671289
+    second: watercolor_soft_blobs_4x4_atlas_256_13
+  - first:
+      213: 572601247197738908
+    second: watercolor_soft_blobs_4x4_atlas_256_14
+  - first:
+      213: -1386861651880994344
+    second: watercolor_soft_blobs_4x4_atlas_256_15
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 0
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: watercolor_soft_blobs_4x4_atlas_256_0
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 770
+        width: 250
+        height: 250
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 22a0bf347a2a30da0800000000000000
+      internalID: -5979757040934122974
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: watercolor_soft_blobs_4x4_atlas_256_1
+      rect:
+        serializedVersion: 2
+        x: 259
+        y: 771
+        width: 251
+        height: 249
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a7ca55659d40c98e0800000000000000
+      internalID: -1685466829040538502
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: watercolor_soft_blobs_4x4_atlas_256_2
+      rect:
+        serializedVersion: 2
+        x: 515
+        y: 770
+        width: 251
+        height: 251
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d602160bbd84f60e0800000000000000
+      internalID: -2274519178404618131
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: watercolor_soft_blobs_4x4_atlas_256_3
+      rect:
+        serializedVersion: 2
+        x: 771
+        y: 769
+        width: 251
+        height: 252
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0d9b7cbf3e8c3acc0800000000000000
+      internalID: -3700893587261113904
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: watercolor_soft_blobs_4x4_atlas_256_4
+      rect:
+        serializedVersion: 2
+        x: 3
+        y: 514
+        width: 252
+        height: 251
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: add0d3245b6f8eaa0800000000000000
+      internalID: -6131379634304119334
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: watercolor_soft_blobs_4x4_atlas_256_5
+      rect:
+        serializedVersion: 2
+        x: 259
+        y: 514
+        width: 251
+        height: 251
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1a8c387cebf78d310800000000000000
+      internalID: 1430033339057948833
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: watercolor_soft_blobs_4x4_atlas_256_6
+      rect:
+        serializedVersion: 2
+        x: 515
+        y: 514
+        width: 251
+        height: 251
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 07947e7fcdc78c0d0800000000000000
+      internalID: -3402332229984630416
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: watercolor_soft_blobs_4x4_atlas_256_7
+      rect:
+        serializedVersion: 2
+        x: 772
+        y: 515
+        width: 250
+        height: 250
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a01681111a26ed2e0800000000000000
+      internalID: -2099131932392005366
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: watercolor_soft_blobs_4x4_atlas_256_8
+      rect:
+        serializedVersion: 2
+        x: 3
+        y: 259
+        width: 250
+        height: 249
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 58727a880ca20c1c0800000000000000
+      internalID: -4485538222446270587
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: watercolor_soft_blobs_4x4_atlas_256_9
+      rect:
+        serializedVersion: 2
+        x: 259
+        y: 257
+        width: 251
+        height: 252
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 54a51dd72218ac470800000000000000
+      internalID: 8415680838834936389
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: watercolor_soft_blobs_4x4_atlas_256_10
+      rect:
+        serializedVersion: 2
+        x: 516
+        y: 259
+        width: 250
+        height: 250
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9994b8e3866486cf0800000000000000
+      internalID: -258879565033944679
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: watercolor_soft_blobs_4x4_atlas_256_11
+      rect:
+        serializedVersion: 2
+        x: 772
+        y: 259
+        width: 250
+        height: 250
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8bb8cd282d3f853b0800000000000000
+      internalID: -5523396857505739848
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: watercolor_soft_blobs_4x4_atlas_256_12
+      rect:
+        serializedVersion: 2
+        x: 3
+        y: 2
+        width: 250
+        height: 251
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5d67d26c23d451c20800000000000000
+      internalID: 3176529992648324821
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: watercolor_soft_blobs_4x4_atlas_256_13
+      rect:
+        serializedVersion: 2
+        x: 259
+        y: 3
+        width: 251
+        height: 249
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 74acabd77840de7a0800000000000000
+      internalID: -6346411319918671289
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: watercolor_soft_blobs_4x4_atlas_256_14
+      rect:
+        serializedVersion: 2
+        x: 515
+        y: 1
+        width: 251
+        height: 251
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c97ba21fcc942f700800000000000000
+      internalID: 572601247197738908
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: watercolor_soft_blobs_4x4_atlas_256_15
+      rect:
+        serializedVersion: 2
+        x: 771
+        y: 2
+        width: 251
+        height: 250
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8d9950feca0e0cce0800000000000000
+      internalID: -1386861651880994344
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      watercolor_soft_blobs_4x4_atlas_256_0: -5979757040934122974
+      watercolor_soft_blobs_4x4_atlas_256_1: -1685466829040538502
+      watercolor_soft_blobs_4x4_atlas_256_10: -258879565033944679
+      watercolor_soft_blobs_4x4_atlas_256_11: -5523396857505739848
+      watercolor_soft_blobs_4x4_atlas_256_12: 3176529992648324821
+      watercolor_soft_blobs_4x4_atlas_256_13: -6346411319918671289
+      watercolor_soft_blobs_4x4_atlas_256_14: 572601247197738908
+      watercolor_soft_blobs_4x4_atlas_256_15: -1386861651880994344
+      watercolor_soft_blobs_4x4_atlas_256_2: -2274519178404618131
+      watercolor_soft_blobs_4x4_atlas_256_3: -3700893587261113904
+      watercolor_soft_blobs_4x4_atlas_256_4: -6131379634304119334
+      watercolor_soft_blobs_4x4_atlas_256_5: 1430033339057948833
+      watercolor_soft_blobs_4x4_atlas_256_6: -3402332229984630416
+      watercolor_soft_blobs_4x4_atlas_256_7: -2099131932392005366
+      watercolor_soft_blobs_4x4_atlas_256_8: -4485538222446270587
+      watercolor_soft_blobs_4x4_atlas_256_9: 8415680838834936389
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
