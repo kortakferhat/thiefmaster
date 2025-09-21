@@ -102405,8 +102405,8 @@ MonoBehaviour:
   m_LightType: 4
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.5
-  m_Color: {r: 0.85882354, g: 0.7554959, b: 0.3372549, a: 1}
-  m_Intensity: 0.36
+  m_Color: {r: 0.9811321, g: 0.8589041, b: 0.66180134, a: 1}
+  m_Intensity: 1
   m_LightVolumeIntensity: 1
   m_LightVolumeEnabled: 0
   m_ApplyToSortingLayers: 0000000043a342ad3bd485bdb1b06caadd9f0746616234277957b2a3
@@ -103545,6 +103545,18 @@ PrefabInstance:
     - target: {fileID: 4621229515235408885, guid: 7d0e26166422e4850962275d30053453, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5456397063418773053, guid: 7d0e26166422e4850962275d30053453, type: 3}
+      propertyPath: m_Intensity
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5456397063418773053, guid: 7d0e26166422e4850962275d30053453, type: 3}
+      propertyPath: m_PointLightInnerRadius
+      value: 0.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 5456397063418773053, guid: 7d0e26166422e4850962275d30053453, type: 3}
+      propertyPath: m_PointLightOuterRadius
+      value: 4
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
