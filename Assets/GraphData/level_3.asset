@@ -52,7 +52,7 @@ MonoBehaviour:
       enemyFacingDirection: {x: 0, y: 1}
       enemyBehaviourType: Stationary
     - id: {x: 5, y: -2}
-      type: 0
+      type: 6
       isDestroyed: 0
       enemyFacingDirection: {x: 0, y: 1}
       enemyBehaviourType: Stationary
@@ -72,10 +72,10 @@ MonoBehaviour:
       enemyFacingDirection: {x: 0, y: 1}
       enemyBehaviourType: Stationary
     - id: {x: 7, y: -4}
-      type: 0
+      type: 6
       isDestroyed: 0
       enemyFacingDirection: {x: 0, y: 1}
-      enemyBehaviourType: Stationary
+      enemyBehaviourType: Patrol
     - id: {x: 8, y: -3}
       type: 0
       isDestroyed: 0
@@ -127,7 +127,7 @@ MonoBehaviour:
       enemyFacingDirection: {x: 0, y: 1}
       enemyBehaviourType: Stationary
     - id: {x: 5, y: -4}
-      type: 0
+      type: 6
       isDestroyed: 0
       enemyFacingDirection: {x: 0, y: 1}
       enemyBehaviourType: Stationary
