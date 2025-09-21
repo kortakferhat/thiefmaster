@@ -120,9 +120,9 @@ Material:
     - _ColorSwapRedLuminosity: 0.5
     - _Contrast: 1
     - _CullingOption: 0
-    - _DistortAmount: 0.5
-    - _DistortTexXSpeed: 5
-    - _DistortTexYSpeed: 5
+    - _DistortAmount: 0.2
+    - _DistortTexXSpeed: 1
+    - _DistortTexYSpeed: 1
     - _EditorDrawers: 14
     - _EnableExternalAlpha: 0
     - _FadeAmount: -0.1
@@ -192,7 +192,7 @@ Material:
     - _OutlinePixelWidth: 1
     - _OutlineTexXSpeed: 10
     - _OutlineTexYSpeed: 0
-    - _OutlineWidth: 0.004
+    - _OutlineWidth: 0.1
     - _OverlayBlend: 1
     - _OverlayGlow: 1
     - _OverlayTextureScrollXSpeed: 0.25
