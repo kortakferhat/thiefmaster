@@ -5,6 +5,7 @@ using Infrastructure.Managers.EconomyManager;
 using Infrastructure.Managers.LevelManager;
 using Infrastructure.Managers.TooltipManager;
 using Infrastructure.Input;
+using Infrastructure.Managers.AudioManager;
 using Infrastructure.Managers.CameraManager;
 using Infrastructure.Managers.GameManager;
 using Infrastructure.Managers.TurnManager;
@@ -70,6 +71,10 @@ namespace Gameplay.Bootstrapper
             var turnManager = new TurnManager();
             turnManager.Initialize();
             ServiceLocator.Register<ITurnManager>(turnManager);
+            
+            var audioManager = Instantiate(new GameObject("AudioManager"), managersParent).AddComponent<AudioManager>();
+            audioManager.Initialize();
+            ServiceLocator.Register<IAudioManager>(audioManager);
             
             var gridEnemyManager = Instantiate(new GameObject("GridEnemyManager"), managersParent).AddComponent<GridEnemyManager>();
             gridEnemyManager.Initialize(levelManager, gameManager);
